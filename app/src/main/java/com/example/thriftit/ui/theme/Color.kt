@@ -1,4 +1,4 @@
-package com.example.thrift_it.ui.theme
+package com.example.thriftit.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

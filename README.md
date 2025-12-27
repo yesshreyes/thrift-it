@@ -8,6 +8,12 @@
 
 ## 📋 Phase 1: Project Setup & Basic UI 
 
+### Project Setup
+- [x] GitHub repo initial commit
+- [x] Add README.md
+- [x] Setup Ktlint
+- [x] Update versions
+
 ### Screen Structure Setup
 - [ ] Create `MainActivity.kt` with theme setup
 - [ ] Create `AuthScreen.kt` (UI only)
@@ -368,9 +374,6 @@
 - [ ] Reduce app size
 
 ### Code Quality
-- [ ] Remove unused imports and code
-- [ ] Add meaningful comments
-- [ ] Follow Kotlin coding conventions
 - [ ] Extract hardcoded strings to resources
 - [ ] Use constants for magic numbers
 - [ ] Refactor duplicate code
