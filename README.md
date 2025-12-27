@@ -1,0 +1,403 @@
+# Thrift It - Development Roadmap & Checklist
+
+**Project**: Buy & Sell Marketplace App  
+**Tech Stack**: Kotlin, Jetpack Compose, Firebase
+**Architecture**: Offline-First MVVM  
+
+---
+
+## 📋 Phase 1: Project Setup & Basic UI 
+
+### Screen Structure Setup
+- [ ] Create `MainActivity.kt` with theme setup
+- [ ] Create `AuthScreen.kt` (UI only)
+- [ ] Create `ProfileSetupScreen.kt` (UI only)
+- [ ] Create `BuyScreen.kt` (UI only - grid layout)
+- [ ] Create `SellScreen.kt` (UI only - form layout)
+- [ ] Create `SettingsScreen.kt` (UI only - list layout)
+- [ ] Create `NotificationScreen.kt` (UI only)
+
+### Navigation Setup
+- [ ] Create `NavGraph.kt` with all routes defined
+- [ ] Implement bottom navigation bar (Buy, Sell, Settings)
+- [ ] Add navigation between screens
+- [ ] Add top bar with "THRIFT IT" branding
+- [ ] Add notification icon in top bar
+- [ ] Test navigation flow
+
+### Static UI Components
+- [ ] Design item card component for grid view
+- [ ] Create filter bottom sheet UI
+- [ ] Create search bar component
+- [ ] Create item detail dialog/bottom sheet
+- [ ] Create upload form UI
+- [ ] Test all screens with dummy data
+
+---
+
+## 📋 Phase 2: Data Layer & Backend Setup 
+
+### Firebase Project Setup
+- [ ] Create Firebase project in console
+- [ ] Enable Phone Authentication in Firebase Console
+- [ ] Create Firestore database
+- [ ] Setup Firestore collections structure:
+  - [ ] `users` collection
+  - [ ] `items` collection
+- [ ] Setup Firebase Storage bucket
+- [ ] Configure Firestore indexes for queries
+- [ ] Write Firestore security rules 
+
+### Room Database Setup
+- [ ] Create `entities/ItemEntity.kt` with all fields
+- [ ] Create `entities/UserEntity.kt` with all fields
+- [ ] Create `dao/ItemDao.kt` with CRUD operations
+- [ ] Create `dao/UserDao.kt` with CRUD operations
+- [ ] Create `AppDatabase.kt` with Room configuration
+- [ ] Add database migration strategy
+- [ ] Test database operations
+
+### Data Models
+- [ ] Create `models/Item.kt` (domain model)
+- [ ] Create `models/User.kt` (domain model)
+- [ ] Create mapper functions (Entity ↔ Domain Model)
+- [ ] Create `sealed class Result<T>` for API responses
+- [ ] Create `sealed class UiState<T>` for UI states
+
+### Repository Layer
+- [ ] Create `repository/AuthRepository.kt`
+  - [ ] Phone authentication methods
+  - [ ] User profile CRUD
+- [ ] Create `repository/ItemRepository.kt`
+  - [ ] Fetch items from Firestore
+- [ ] Create `repository/UserRepository.kt`
+  - [ ] User profile management
+  - [ ] Location updates
+- [ ] Create `repository/UploadRepository.kt`
+  - [ ] Image upload to Storage
+  - [ ] Item creation in Firestore
+
+### ViewModels Setup
+- [ ] Create `viewmodel/AuthViewModel.kt`
+  - [ ] Phone auth state management
+  - [ ] OTP verification logic
+- [ ] Create `viewmodel/BuyViewModel.kt`
+  - [ ] Items flow from repository
+  - [ ] Search state
+  - [ ] Filter state
+- [ ] Create `viewmodel/SellViewModel.kt`
+  - [ ] Upload state management
+  - [ ] Form validation
+- [ ] Create `viewmodel/SettingsViewModel.kt`
+  - [ ] User settings state
+  - [ ] Sign out logic
+- [ ] Create `viewmodel/ProfileViewModel.kt`
+  - [ ] Profile setup state
+
+---
+
+## 📋 Phase 3: Core Features - Authentication 
+
+### Phone Authentication
+- [ ] Implement Firebase Phone Auth in `AuthRepository`
+- [ ] Create OTP input UI in `AuthScreen`
+- [ ] Handle OTP verification
+- [ ] Show loading/error states
+- [ ] Navigate to profile setup on success
+- [ ] Store auth state in ViewModel
+- [ ] Handle auth persistence
+
+### Profile Setup
+- [ ] Request location permission using Accompanist
+- [ ] Get user's current location using FusedLocationProvider
+- [ ] Create profile form (name, address, phone)
+- [ ] Upload profile data to Firestore `/users/{userId}`
+- [ ] Cache user data in Room
+- [ ] Navigate to main app on completion
+- [ ] Handle permission denied scenarios
+
+### Session Management
+- [ ] Check if user is already logged in on app start
+- [ ] Navigate accordingly (Auth vs Main)
+- [ ] Implement sign out functionality
+- [ ] Clear Room cache on sign out
+- [ ] Clear Firebase auth state
+
+---
+
+## 📋 Phase 4: Core Features - Buy Screen 
+
+### Data Fetching
+- [ ] Fetch items from Firestore in `ItemRepository`
+- [ ] Expose items from repository to ViewModel
+- [ ] Update UI using StateFlow in Compose
+- [ ] Handle empty state (no items)
+- [ ] Handle loading state
+- [ ] Handle Firestore errors
+
+### Grid Layout Implementation
+- [ ] Implement `LazyVerticalGrid` with 2 columns
+- [ ] Display item cards with:
+  - [ ] Image (using Coil)
+  - [ ] Name
+  - [ ] Price
+  - [ ] Description
+  - [ ] Item age
+  - [ ] Distance from user
+- [ ] Calculate distance using Haversine formula
+- [ ] Format distance (e.g., "2.5 km away")
+
+### Search Functionality
+- [ ] Add search bar in top bar
+- [ ] Implement search logic in repository
+- [ ] Filter items by keywords
+- [ ] Update UI with search results
+- [ ] Handle empty search results
+- [ ] Add clear search button
+
+### Filter Functionality
+- [ ] Create filter bottom sheet UI
+- [ ] Add price range slider
+- [ ] Add distance range slider
+- [ ] Apply filters to Firestore query
+- [ ] Update UI with filtered results
+- [ ] Show active filters indicator
+- [ ] Add clear filters option
+
+### Item Detail & WhatsApp Integration
+- [ ] Create item detail dialog/bottom sheet
+- [ ] Show full item details on card click
+- [ ] Add "Connect" button
+- [ ] Get seller's phone from Firestore
+- [ ] Create WhatsApp deep link with pre-filled message
+- [ ] Launch WhatsApp with Intent
+- [ ] Handle WhatsApp not installed case
+
+---
+
+## 📋 Phase 5: Core Features - Sell Screen 
+
+### Image Picker
+- [ ] Request camera permission
+- [ ] Implement `ActivityResultContracts.PickVisualMedia()`
+- [ ] Add option to pick from gallery
+- [ ] Add option to take photo
+- [ ] Show selected image preview
+- [ ] Handle permission denied
+- [ ] Compress image before upload
+
+### Upload Form
+- [ ] Create form fields:
+  - [ ] Item name (TextField)
+  - [ ] Price (TextField with number input)
+  - [ ] Description (TextField multiline)
+  - [ ] Item age/condition (Dropdown/Radio)
+- [ ] Add form validation
+- [ ] Show validation errors
+- [ ] Disable submit until valid
+
+### Firebase Upload
+- [ ] Upload image to Firebase Storage
+- [ ] Get download URL
+- [ ] Create item document in Firestore with:
+  - [ ] Image URL
+  - [ ] User ID (seller)
+  - [ ] Location (lat/lng)
+  - [ ] Timestamp
+  - [ ] All form data
+- [ ] Show upload progress
+- [ ] Handle upload errors
+
+### Notifications
+- [ ] Create notification channel
+- [ ] Show success notification when uploaded
+- [ ] Add notification permission request (Android 13+)
+- [ ] Notification should open app on click
+
+### Post-Upload
+- [ ] Clear form after successful upload
+- [ ] Show success message
+- [ ] Navigate to Buy screen to see uploaded item
+- [ ] Add option to upload another item
+
+---
+
+## 📋 Phase 6: Core Features - Settings & Notifications 
+
+### Settings Screen
+- [ ] Display user profile info
+- [ ] Add edit profile option
+- [ ] Add update location button
+- [ ] Update location in Firestore and Room
+- [ ] Add address management
+- [ ] Show app version
+- [ ] Add sign out button
+- [ ] Confirm sign out with dialog
+- [ ] Clear all data on sign out
+
+### Notification Screen
+- [ ] Display list of notifications
+- [ ] Store notifications in Room 
+- [ ] Show notification for: 
+  - [ ] Item uploaded successfully
+- [ ] Mark notifications as read
+- [ ] Delete notifications
+- [ ] Handle empty state
+
+---
+
+## 📋 Phase 7: Offline-First Implementation
+
+### Offline Architecture
+- [ ] Make Room the single source of truth
+- [ ] Always read from Room, not Firestore directly
+- [ ] Set Firestore offline persistence enabled
+- [ ] Implement repository pattern properly:
+  - [ ] Emit data from Room
+  - [ ] Sync Firestore in background
+  - [ ] Update Room on Firestore changes
+
+### Network State Handling
+- [ ] Create `NetworkObserver` to monitor connectivity
+- [ ] Show network status indicator in UI
+- [ ] Queue uploads when offline
+- [ ] Sync when back online
+- [ ] Handle sync conflicts
+
+### Offline Upload Queue
+- [ ] Store pending uploads in Room
+- [ ] Mark items as "pending_upload"
+- [ ] Update status on success
+- [ ] Show pending indicator in UI
+
+### Pull to Refresh
+- [ ] Add `SwipeRefresh` to Buy screen
+- [ ] Trigger Firestore fetch on pull
+- [ ] Update Room with new data
+- [ ] Show refresh indicator
+
+### Pagination & Sync
+- [ ] Pagination logic for Buy and other screens
+
+---
+
+## 📋 Phase 8: State Management & Error Handling (Week 5)
+
+### State Management
+- [ ] Implement proper UiState for all screens
+- [ ] Handle Loading state with shimmer/skeleton
+- [ ] Handle Success state
+- [ ] Handle Error state with retry option
+- [ ] Handle Empty state with helpful message
+
+### Error Handling
+- [ ] Network errors (timeout, no connection)
+- [ ] Firebase errors (auth failed, permission denied)
+- [ ] Upload errors (storage full, file too large)
+- [ ] Location errors (permission denied, GPS off)
+- [ ] Show user-friendly error messages
+- [ ] Add retry mechanisms
+- [ ] Log errors for debugging
+
+### Edge Cases
+- [ ] Handle GPS disabled
+- [ ] Handle location permission denied
+- [ ] Handle WhatsApp not installed
+- [ ] Handle camera permission denied
+- [ ] Handle no items in area
+- [ ] Handle user profile incomplete
+- [ ] Handle Firebase quota exceeded
+
+---
+
+## 📋 Phase 9: UI/UX Polish & Beautification (Week 6)
+
+### Splash Screen
+- [ ] Create animated splash screen
+- [ ] Add "THRIFT IT" logo
+- [ ] Add brand colors
+- [ ] Show for 2 seconds
+- [ ] Navigate based on auth state
+
+### App Icon
+- [ ] Design app icon
+- [ ] Create adaptive icon (foreground + background)
+- [ ] Generate all required sizes
+- [ ] Update manifest with icon
+- [ ] Test on different launchers
+
+### Theme & Branding
+- [ ] Define color palette (primary, secondary, accent)
+- [ ] Create Material3 theme
+- [ ] Add "THRIFT IT" branding in top bar
+- [ ] Use consistent typography
+- [ ] Add brand personality to copy
+
+### UI Improvements
+- [ ] Polish item card design
+- [ ] Improve spacing and padding
+- [ ] Add subtle shadows and elevations
+- [ ] Improve button styles
+- [ ] Add icons where appropriate
+- [ ] Ensure proper contrast ratios
+- [ ] Test on different screen sizes
+
+---
+
+## 📋 Phase 10: Testing & Optimization 
+
+### Functional Testing
+- [ ] Test complete auth flow
+- [ ] Test offline scenarios
+- [ ] Test pagination behavior
+- [ ] Test search and filters
+- [ ] Test image upload
+- [ ] Test WhatsApp integration
+- [ ] Test location permission flow
+- [ ] Test sign out and data clearing
+- [ ] Test on different Android versions
+
+### Performance Optimization
+- [ ] Optimize image loading with Coil caching
+- [ ] Optimize LazyGrid performance
+- [ ] Optimize database queries
+- [ ] Reduce Firestore reads
+- [ ] Implement proper image compression
+- [ ] Profile app with Android Profiler
+- [ ] Fix memory leaks
+- [ ] Reduce app size
+
+### Code Quality
+- [ ] Remove unused imports and code
+- [ ] Add meaningful comments
+- [ ] Follow Kotlin coding conventions
+- [ ] Extract hardcoded strings to resources
+- [ ] Use constants for magic numbers
+- [ ] Refactor duplicate code
+- [ ] Ensure proper package structure
+
+### Documentation
+- [ ] Update README with:
+  - [ ] Project description
+  - [ ] Features list
+  - [ ] Setup instructions
+  - [ ] Screenshots
+  - [ ] Tech stack
+- [ ] Add code documentation (KDoc)
+- [ ] Create CONTRIBUTING.md
+- [ ] Add LICENSE file
+
+---
+
+## 📝 Git Commit Guidelines
+
+**Format**: `type: description`
+
+**Types**:
+- `feat`: New feature
+- `fix`: Bug fix
+- `refactor`: Code refactoring
+- `style`: UI/styling changes
+- `docs`: Documentation
+- `test`: Testing
+- `chore`: Build/config changes
