@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -18,7 +17,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -40,42 +38,45 @@ data class ItemDetail(
     val itemAge: String,
     val distance: Double,
     val sellerName: String,
-    val sellerPhone: String
+    val sellerPhone: String,
 )
 
 @Composable
 fun ItemDetailDialog(
     item: ItemDetail,
     onDismiss: () -> Unit = {},
-    onConnect: () -> Unit = {}
+    onConnect: () -> Unit = {},
 ) {
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
             ) {
                 // Close Button
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.End
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                    horizontalArrangement = Arrangement.End,
                 ) {
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Close",
-                            tint = MaterialTheme.colorScheme.onSurface
+                            tint = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
@@ -84,28 +85,30 @@ fun ItemDetailDialog(
                 AsyncImage(
                     model = item.imageUrl,
                     contentDescription = item.name,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(250.dp)
-                        .padding(horizontal = 16.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(250.dp)
+                            .padding(horizontal = 16.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Item Details
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
                 ) {
                     // Item Name
                     Text(
                         text = item.name,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -115,7 +118,7 @@ fun ItemDetailDialog(
                         text = "₹${item.price.toInt()}",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -125,7 +128,7 @@ fun ItemDetailDialog(
                         text = "Description",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -134,7 +137,7 @@ fun ItemDetailDialog(
                         text = item.description,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
+                        lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -151,15 +154,16 @@ fun ItemDetailDialog(
                     // Connect Button
                     Button(
                         onClick = onConnect,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(12.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                        shape = RoundedCornerShape(12.dp),
                     ) {
                         Text(
                             text = "Connect with Seller",
                             style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
                         )
                     }
 
@@ -173,46 +177,45 @@ fun ItemDetailDialog(
 @Composable
 private fun DetailRow(
     label: String,
-    value: String
+    value: String,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
 
-private fun formatDistance(distance: Double): String {
-    return "%.1f".format(distance)
-}
+private fun formatDistance(distance: Double): String = "%.1f".format(distance)
 
 @Preview(showBackground = true)
 @Composable
 private fun ItemDetailDialogPreview() {
     MaterialTheme {
         ItemDetailDialog(
-            item = ItemDetail(
-                name = "iPhone 12",
-                price = 35000.0,
-                description = "Excellent condition iPhone 12 with 128GB storage. Comes with original box, charger, and EarPods. No scratches on screen. Battery health is 87%. Used for 1 year only.",
-                imageUrl = "https://via.placeholder.com/300",
-                itemAge = "1 year old",
-                distance = 2.5,
-                sellerName = "John Doe",
-                sellerPhone = "+919876543210"
-            )
+            item =
+                ItemDetail(
+                    name = "iPhone 12",
+                    price = 35000.0,
+                    description = "Excellent condition ",
+                    imageUrl = "https://via.placeholder.com/300",
+                    itemAge = "1 year old",
+                    distance = 2.5,
+                    sellerName = "John Doe",
+                    sellerPhone = "+919876543210",
+                ),
         )
     }
 }

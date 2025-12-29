@@ -14,30 +14,29 @@ import androidx.compose.ui.text.font.FontWeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ThriftItTopBar(
-    onNotificationClick: () -> Unit = {}
-) {
+fun ThriftItTopBar(onNotificationClick: () -> Unit = {}) {
     TopAppBar(
         title = {
             Text(
                 text = "THRIFT IT",
                 fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
             )
         },
         actions = {
             IconButton(
-                onClick = {}
+                onClick = {},
             ) {
                 Icon(
                     imageVector = Icons.Default.Notifications,
-                    contentDescription = "Notifications"
+                    contentDescription = "Notifications",
                 )
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            titleContentColor = MaterialTheme.colorScheme.primary
-        )
+        colors =
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                titleContentColor = MaterialTheme.colorScheme.primary,
+            ),
     )
 }

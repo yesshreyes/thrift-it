@@ -33,14 +33,14 @@ import kotlin.math.roundToInt
 @Composable
 fun FilterBottomSheet(
     onDismiss: () -> Unit = {},
-    onApplyFilters: () -> Unit = {}
+    onApplyFilters: () -> Unit = {},
 ) {
     var priceRange by rememberSaveable { mutableStateOf(0f..100000f) }
     var maxDistance by rememberSaveable { mutableFloatStateOf(10f) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         FilterContent(
             priceRange = priceRange,
@@ -51,7 +51,7 @@ fun FilterBottomSheet(
                 priceRange = 0f..100000f
                 maxDistance = 10f
             },
-            onApplyFilters = onApplyFilters
+            onApplyFilters = onApplyFilters,
         )
     }
 }
@@ -63,19 +63,20 @@ private fun FilterContent(
     onPriceRangeChange: (ClosedFloatingPointRange<Float>) -> Unit,
     onDistanceChange: (Float) -> Unit,
     onClearAll: () -> Unit,
-    onApplyFilters: () -> Unit
+    onApplyFilters: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(24.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
     ) {
         // Header
         Text(
             text = "Filters",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -84,7 +85,7 @@ private fun FilterContent(
         Text(
             text = "Price Range",
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -93,7 +94,7 @@ private fun FilterContent(
             text = "₹${priceRange.start.roundToInt()} - ₹${priceRange.endInclusive.roundToInt()}",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -103,24 +104,24 @@ private fun FilterContent(
             onValueChange = onPriceRangeChange,
             valueRange = 0f..100000f,
             steps = 99,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = "₹0",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
                 text = "₹1,00,000",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
@@ -130,7 +131,7 @@ private fun FilterContent(
         Text(
             text = "Maximum Distance",
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -139,7 +140,7 @@ private fun FilterContent(
             text = "${maxDistance.roundToInt()} km away",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -149,24 +150,24 @@ private fun FilterContent(
             onValueChange = onDistanceChange,
             valueRange = 1f..50f,
             steps = 48,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = "1 km",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
                 text = "50 km",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
@@ -175,18 +176,18 @@ private fun FilterContent(
         // Action Buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             OutlinedButton(
                 onClick = onClearAll,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Text("Clear All")
             }
 
             Button(
                 onClick = onApplyFilters,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Text("Apply Filters")
             }
@@ -207,7 +208,7 @@ private fun FilterContentPreview() {
                 onPriceRangeChange = {},
                 onDistanceChange = {},
                 onClearAll = {},
-                onApplyFilters = {}
+                onApplyFilters = {},
             )
         }
     }

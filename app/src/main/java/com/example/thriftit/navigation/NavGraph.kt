@@ -78,7 +78,7 @@ fun MainScreen() {
             ThriftItTopBar(
                 onNotificationClick = {
                     mainNavController.navigate(NotificationRoute)
-                }
+                },
             )
         },
         bottomBar = {
