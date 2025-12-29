@@ -37,9 +37,7 @@ private const val NAME_MAX_LENGTH = 50
 private const val ADDRESS_MAX_LENGTH = 200
 
 @Composable
-fun ProfileSetupScreen(
-    onNavigateToMain: () -> Unit = {}
-) {
+fun ProfileSetupScreen(onNavigateToMain: () -> Unit = {}) {
     var name by rememberSaveable { mutableStateOf("") }
     var phoneNumber by rememberSaveable { mutableStateOf("") }
     var address by rememberSaveable { mutableStateOf("") }

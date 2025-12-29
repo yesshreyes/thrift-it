@@ -15,29 +15,28 @@
 - [x] Update versions
 
 ### Screen Structure Setup
-- [ ] Create `MainActivity.kt` with theme setup
-- [ ] Create `AuthScreen.kt` (UI only)
-- [ ] Create `ProfileSetupScreen.kt` (UI only)
-- [ ] Create `BuyScreen.kt` (UI only - grid layout)
-- [ ] Create `SellScreen.kt` (UI only - form layout)
-- [ ] Create `SettingsScreen.kt` (UI only - list layout)
-- [ ] Create `NotificationScreen.kt` (UI only)
+- [x] Create `MainActivity.kt` with theme setup
+- [x] Create `AuthScreen.kt` (UI only)
+- [x] Create `ProfileSetupScreen.kt` (UI only)
+- [x] Create `BuyScreen.kt` (UI only - grid layout)
+- [x] Create `SellScreen.kt` (UI only - form layout)
+- [x] Create `SettingsScreen.kt` (UI only - list layout)
+- [x] Create `NotificationScreen.kt` (UI only)
 
 ### Navigation Setup
-- [ ] Create `NavGraph.kt` with all routes defined
-- [ ] Implement bottom navigation bar (Buy, Sell, Settings)
-- [ ] Add navigation between screens
+- [x] Create `NavGraph.kt` with all routes defined
+- [x] Implement bottom navigation bar (Buy, Sell, Settings)
+- [x] Add navigation between screens
 - [ ] Add top bar with "THRIFT IT" branding
 - [ ] Add notification icon in top bar
 - [ ] Test navigation flow
 
 ### Static UI Components
-- [ ] Design item card component for grid view
+- [x] Design item card component for grid view
 - [ ] Create filter bottom sheet UI
-- [ ] Create search bar component
+- [x] Create search bar component
 - [ ] Create item detail dialog/bottom sheet
-- [ ] Create upload form UI
-- [ ] Test all screens with dummy data
+- [x] Create upload form UI
 
 ---
 

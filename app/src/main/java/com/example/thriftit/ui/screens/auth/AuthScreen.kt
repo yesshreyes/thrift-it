@@ -32,9 +32,7 @@ private const val PHONE_LENGTH = 10
 private const val OTP_LENGTH = 6
 
 @Composable
-fun AuthScreen(
-    onNavigateToProfile: () -> Unit = {}
-) {
+fun AuthScreen(onNavigateToProfile: () -> Unit = {}) {
     var phoneNumber by rememberSaveable { mutableStateOf("") }
     var otp by rememberSaveable { mutableStateOf("") }
     var isOtpSent by rememberSaveable { mutableStateOf(false) }
