@@ -32,9 +32,9 @@
 
 ### Static UI Components
 - [x] Design item card component for grid view
-- [ ] Create filter bottom sheet UI
+- [x] Create filter bottom sheet UI
 - [x] Create search bar component
-- [ ] Create item detail dialog/bottom sheet
+- [x] Create item detail dialog/bottom sheet
 - [x] Create upload form UI
 
 ---
