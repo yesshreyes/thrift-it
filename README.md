@@ -27,9 +27,8 @@
 - [x] Create `NavGraph.kt` with all routes defined
 - [x] Implement bottom navigation bar (Buy, Sell, Settings)
 - [x] Add navigation between screens
-- [ ] Add top bar with "THRIFT IT" branding
-- [ ] Add notification icon in top bar
-- [ ] Test navigation flow
+- [x] Add top bar with "THRIFT IT" branding
+- [x] Add notification icon in top bar
 
 ### Static UI Components
 - [x] Design item card component for grid view

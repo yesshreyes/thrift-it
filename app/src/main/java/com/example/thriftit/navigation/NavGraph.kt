@@ -24,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.example.thriftit.ui.components.ThriftItTopBar
 import com.example.thriftit.ui.screens.auth.AuthScreen
 import com.example.thriftit.ui.screens.buy.BuyScreen
 import com.example.thriftit.ui.screens.notification.NotificationScreen
@@ -73,6 +74,13 @@ fun MainScreen() {
     val mainNavController = rememberNavController()
 
     Scaffold(
+        topBar = {
+            ThriftItTopBar(
+                onNotificationClick = {
+                    mainNavController.navigate(NotificationRoute)
+                }
+            )
+        },
         bottomBar = {
             BottomNavigationBar(navController = mainNavController)
         },
