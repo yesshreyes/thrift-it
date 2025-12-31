@@ -42,15 +42,14 @@
 ## 📋 Phase 2: Data Layer & Backend Setup 
 
 ### Firebase Project Setup
-- [ ] Create Firebase project in console
-- [ ] Enable Phone Authentication in Firebase Console
-- [ ] Create Firestore database
-- [ ] Setup Firestore collections structure:
-  - [ ] `users` collection
-  - [ ] `items` collection
+- [x] Create Firebase project in console
+- [x] Enable Phone Authentication in Firebase Console
+- [x] Create Firestore database
+- [x] Setup Firestore collections structure:
+  - [x] `users` collection
+  - [x] `items` collection
 - [ ] Setup Firebase Storage bucket
 - [ ] Configure Firestore indexes for queries
-- [ ] Write Firestore security rules 
 
 ### Room Database Setup
 - [ ] Create `entities/ItemEntity.kt` with all fields
@@ -110,6 +109,7 @@
 - [ ] Navigate to profile setup on success
 - [ ] Store auth state in ViewModel
 - [ ] Handle auth persistence
+- [ ] Write Firestore security rules
 
 ### Profile Setup
 - [ ] Request location permission using Accompanist
