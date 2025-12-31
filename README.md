@@ -48,8 +48,12 @@
 - [x] Setup Firestore collections structure:
   - [x] `users` collection
   - [x] `items` collection
-- [ ] Setup Firebase Storage bucket
 - [ ] Configure Firestore indexes for queries
+
+### Image Storage
+- [ ] Create Cloudinary account
+- [ ] Get Cloud Name, API Key, and API Secret from dashboard
+- [ ] Add Cloudinary credentials to Android project
 
 ### Room Database Setup
 - [ ] Create `entities/ItemEntity.kt` with all fields
