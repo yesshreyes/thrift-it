@@ -8,6 +8,8 @@ plugins {
     alias(libs.plugins.ktlint)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.3.0"
     id("com.google.gms.google-services")
+    kotlin("kapt")
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -92,4 +94,9 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation("com.cloudinary:cloudinary-android:3.1.2")
     implementation(libs.coil.compose)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    kapt(libs.androidx.room.compiler)
+    implementation(libs.hilt.android)
+    kapt("com.google.dagger:hilt-compiler:2.57.2")
 }

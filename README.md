@@ -56,13 +56,12 @@
 - [x] Add Cloudinary credentials to Android project
 
 ### Room Database Setup
-- [ ] Create `entities/ItemEntity.kt` with all fields
-- [ ] Create `entities/UserEntity.kt` with all fields
-- [ ] Create `dao/ItemDao.kt` with CRUD operations
-- [ ] Create `dao/UserDao.kt` with CRUD operations
-- [ ] Create `AppDatabase.kt` with Room configuration
-- [ ] Add database migration strategy
-- [ ] Test database operations
+- [x] Create `entities/ItemEntity.kt` with all fields
+- [x] Create `entities/UserEntity.kt` with all fields
+- [x] Create `dao/ItemDao.kt` with CRUD operations
+- [x] Create `dao/UserDao.kt` with CRUD operations
+- [x] Create `AppDatabase.kt` with Room configuration
+- [x] Add database migration strategy
 
 ### Data Models
 - [ ] Create `models/Item.kt` (domain model)
