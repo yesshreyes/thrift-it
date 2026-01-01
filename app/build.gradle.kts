@@ -1,4 +1,5 @@
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -16,13 +17,20 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.thrift_it"
+        applicationId = "com.example.thriftit"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val properties = Properties()
+        properties.load(project.rootProject.file("local.properties").inputStream())
+
+        buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${properties.getProperty("cloudinary.cloud_name")}\"")
+        buildConfigField("String", "CLOUDINARY_API_KEY", "\"${properties.getProperty("cloudinary.api_key")}\"")
+        buildConfigField("String", "CLOUDINARY_API_SECRET", "\"${properties.getProperty("cloudinary.api_secret")}\"")
     }
 
     buildTypes {
@@ -40,6 +48,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -81,4 +90,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+    implementation("com.cloudinary:cloudinary-android:3.1.2")
+    implementation(libs.coil.compose)
 }
