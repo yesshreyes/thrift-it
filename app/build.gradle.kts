@@ -90,8 +90,6 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics)
     implementation("com.cloudinary:cloudinary-android:3.1.2")
     implementation(libs.coil.compose)
     implementation(libs.androidx.room.runtime)
@@ -99,4 +97,12 @@ dependencies {
     kapt(libs.androidx.room.compiler)
     implementation(libs.hilt.android)
     kapt("com.google.dagger:hilt-compiler:2.57.2")
+
+    // Firebase BOM
+    implementation(platform("com.google.firebase:firebase-bom:34.7.0"))
+
+    // Firebase SDKs
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-analytics")
 }

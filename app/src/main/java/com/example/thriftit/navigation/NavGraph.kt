@@ -22,15 +22,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import com.example.thriftit.ui.components.ThriftItTopBar
-import com.example.thriftit.ui.screens.auth.AuthScreen
-import com.example.thriftit.ui.screens.buy.BuyScreen
-import com.example.thriftit.ui.screens.notification.NotificationScreen
-import com.example.thriftit.ui.screens.profile.ProfileSetupScreen
-import com.example.thriftit.ui.screens.sell.SellScreen
-import com.example.thriftit.ui.screens.settings.SettingsScreen
+import com.example.thriftit.presentation.components.ThriftItTopBar
+import com.example.thriftit.presentation.screens.auth.AuthScreen
+import com.example.thriftit.presentation.screens.buy.BuyScreen
+import com.example.thriftit.presentation.screens.notification.NotificationScreen
+import com.example.thriftit.presentation.screens.profile.ProfileSetupScreen
+import com.example.thriftit.presentation.screens.sell.SellScreen
+import com.example.thriftit.presentation.screens.settings.SettingsScreen
 
 @Composable
 fun ThriftItNavGraph(

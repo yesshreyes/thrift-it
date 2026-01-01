@@ -1,4 +1,4 @@
-package com.example.thriftit.ui.util
+package com.example.thriftit.presentation.util
 
 import com.example.thriftit.domain.models.Item
 

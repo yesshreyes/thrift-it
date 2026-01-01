@@ -1,4 +1,4 @@
-package com.example.thriftit.ui.screens.buy
+package com.example.thriftit.presentation.screens.buy
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement

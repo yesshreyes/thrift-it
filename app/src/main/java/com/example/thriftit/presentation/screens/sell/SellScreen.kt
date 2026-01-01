@@ -1,4 +1,4 @@
-package com.example.thriftit.ui.screens.sell
+package com.example.thriftit.presentation.screens.sell
 
 import android.net.Uri
 import androidx.compose.foundation.border

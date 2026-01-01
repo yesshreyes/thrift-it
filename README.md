@@ -71,14 +71,14 @@
 - [x] Create `sealed class UiState<T>` for UI states
 
 ### Repository Layer
-- [ ] Create `repository/AuthRepository.kt`
-  - [ ] Phone authentication methods
-  - [ ] User profile CRUD
-- [ ] Create `repository/ItemRepository.kt`
-  - [ ] Fetch items from Firestore
-- [ ] Create `repository/UserRepository.kt`
-  - [ ] User profile management
-  - [ ] Location updates
+- [x] Create `repository/AuthRepository.kt`
+  - [x] Phone authentication methods
+  - [x] User profile CRUD
+- [x] Create `repository/ItemRepository.kt`
+  - [x] Fetch items from Firestore
+- [x] Create `repository/UserRepository.kt`
+  - [x] User profile management
+  - [x] Location updates
 - [ ] Create `repository/UploadRepository.kt`
   - [ ] Image upload to Storage
   - [ ] Item creation in Firestore

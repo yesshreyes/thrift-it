@@ -1,4 +1,4 @@
-package com.example.thriftit.ui.screens.profile
+package com.example.thriftit.presentation.screens.profile
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

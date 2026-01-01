@@ -1,4 +1,4 @@
-package com.example.thriftit.ui.components
+package com.example.thriftit.presentation.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

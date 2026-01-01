@@ -1,4 +1,4 @@
-package com.example.thriftit.ui.components
+package com.example.thriftit.presentation.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
