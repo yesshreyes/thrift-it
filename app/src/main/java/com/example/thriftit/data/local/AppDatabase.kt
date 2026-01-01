@@ -25,7 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        private const val DATABASE_NAME = "thrift_it_database"
+        private const val DATABASE = "thrift_it_database"
 
         fun getDatabase(context: Context): AppDatabase =
             INSTANCE ?: synchronized(this) {
@@ -34,7 +34,7 @@ abstract class AppDatabase : RoomDatabase() {
                         .databaseBuilder(
                             context.applicationContext,
                             AppDatabase::class.java,
-                            DATABASE_NAME,
+                            DATABASE,
                         ).fallbackToDestructiveMigration() // Remove in production
                         // .addMigrations(MIGRATION_1_2) // Add migrations as needed
                         .build()

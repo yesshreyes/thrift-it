@@ -64,11 +64,11 @@
 - [x] Add database migration strategy
 
 ### Data Models
-- [ ] Create `models/Item.kt` (domain model)
-- [ ] Create `models/User.kt` (domain model)
-- [ ] Create mapper functions (Entity ↔ Domain Model)
-- [ ] Create `sealed class Result<T>` for API responses
-- [ ] Create `sealed class UiState<T>` for UI states
+- [x] Create `models/Item.kt` (domain model)
+- [x] Create `models/User.kt` (domain model)
+- [x] Create mapper functions (Entity ↔ Domain Model)
+- [x] Create `sealed class Result<T>` for API responses
+- [x] Create `sealed class UiState<T>` for UI states
 
 ### Repository Layer
 - [ ] Create `repository/AuthRepository.kt`
