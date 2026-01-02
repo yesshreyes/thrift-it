@@ -79,9 +79,9 @@
 - [x] Create `repository/UserRepository.kt`
   - [x] User profile management
   - [x] Location updates
-- [ ] Create `repository/UploadRepository.kt`
-  - [ ] Image upload to Storage
-  - [ ] Item creation in Firestore
+- [x] Create `repository/UploadRepository.kt`
+  - [x] Image upload to Cloudinary
+  - [x] Item creation in Firestore
 
 ### ViewModels Setup
 - [ ] Create `viewmodel/AuthViewModel.kt`
