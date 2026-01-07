@@ -84,21 +84,21 @@
   - [x] Item creation in Firestore
 
 ### ViewModels Setup
-- [ ] Create `viewmodel/AuthViewModel.kt`
-  - [ ] Phone auth state management
-  - [ ] OTP verification logic
-- [ ] Create `viewmodel/BuyViewModel.kt`
-  - [ ] Items flow from repository
-  - [ ] Search state
-  - [ ] Filter state
-- [ ] Create `viewmodel/SellViewModel.kt`
-  - [ ] Upload state management
-  - [ ] Form validation
-- [ ] Create `viewmodel/SettingsViewModel.kt`
-  - [ ] User settings state
-  - [ ] Sign out logic
-- [ ] Create `viewmodel/ProfileViewModel.kt`
-  - [ ] Profile setup state
+- [x] Create `viewmodel/AuthViewModel.kt`
+  - [x] Phone auth state management
+  - [x] OTP verification logic
+- [x] Create `viewmodel/BuyViewModel.kt`
+  - [x] Items flow from repository
+  - [x] Search state
+  - [x] Filter state
+- [x] Create `viewmodel/SellViewModel.kt`
+  - [x] Upload state management
+  - [x] Form validation
+- [x] Create `viewmodel/SettingsViewModel.kt`
+  - [x] User settings state
+  - [x] Sign out logic
+- [x] Create `viewmodel/ProfileViewModel.kt`
+  - [x] Profile setup state
 
 ---
 

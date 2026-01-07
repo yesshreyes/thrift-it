@@ -8,15 +8,14 @@ plugins {
     alias(libs.plugins.ktlint)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.3.0"
     id("com.google.gms.google-services")
-    kotlin("kapt")
+    alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.room)
 }
 
 android {
     namespace = "com.example.thriftit"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.thriftit"
@@ -24,7 +23,6 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val properties = Properties()
@@ -44,14 +42,20 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     buildFeatures {
         compose = true
         buildConfig = true
     }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 kotlin {
@@ -91,20 +95,23 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation("com.cloudinary:cloudinary-android:3.1.2")
-    implementation(libs.coil.compose)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    kapt(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
     implementation(libs.hilt.android)
-    kapt("com.google.dagger:hilt-compiler:2.57.2")
-
-    // Firebase BOM
+    ksp(libs.hilt.compiler)
     implementation(platform("com.google.firebase:firebase-bom:34.7.0"))
-
-    // Firebase SDKs
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-analytics")
-
     implementation("com.squareup.okhttp3:okhttp:5.3.2")
+    implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
+    implementation("javax.inject:javax.inject:1")
+    implementation("com.google.dagger:dagger:2.57.2")
+}
+
+configurations.all {
+    resolutionStrategy {
+        force("com.squareup:javapoet:1.13.0")
+    }
 }

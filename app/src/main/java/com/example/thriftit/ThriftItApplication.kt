@@ -2,7 +2,9 @@ package com.example.thriftit
 
 import android.app.Application
 import com.cloudinary.android.MediaManager
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class ThriftItApplication : Application() {
     override fun onCreate() {
         super.onCreate()

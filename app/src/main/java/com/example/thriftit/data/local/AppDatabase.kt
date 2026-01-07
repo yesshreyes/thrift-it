@@ -14,7 +14,7 @@ import com.example.thriftit.data.local.entities.UserEntity
 @Database(
     entities = [ItemEntity::class, UserEntity::class],
     version = 1,
-    exportSchema = true,
+    exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun itemDao(): ItemDao

@@ -1,6 +1,7 @@
 package com.example.thriftit.presentation.util
 
 import com.example.thriftit.domain.models.Item
+import com.example.thriftit.domain.models.User
 
 sealed class UiState<out T> {
     data object Idle : UiState<Nothing>()
@@ -41,12 +42,16 @@ sealed class AuthUiState {
 
     data object Loading : AuthUiState()
 
+    data class OtpSent(
+        val verificationId: String,
+    ) : AuthUiState()
+
     data class PhoneVerificationSent(
         val verificationId: String,
     ) : AuthUiState()
 
     data class Success(
-        val userId: String,
+        val userId: User?,
     ) : AuthUiState()
 
     data class Error(
