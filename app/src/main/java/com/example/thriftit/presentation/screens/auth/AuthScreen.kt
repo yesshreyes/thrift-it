@@ -1,90 +1,162 @@
 package com.example.thriftit.presentation.screens.auth
 
+import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.thriftit.presentation.util.AuthUiState
+import com.example.thriftit.presentation.viewmodel.AuthViewModel
 
 private const val PHONE_LENGTH = 10
 private const val OTP_LENGTH = 6
 
 @Composable
-fun AuthScreen(onNavigateToProfile: () -> Unit = {}) {
-    var phoneNumber by rememberSaveable { mutableStateOf("") }
-    var otp by rememberSaveable { mutableStateOf("") }
-    var isOtpSent by rememberSaveable { mutableStateOf(false) }
+fun AuthScreen(
+    viewModel: AuthViewModel = hiltViewModel(),
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToHome: () -> Unit = {},
+) {
+    val authState by viewModel.authState.collectAsState()
+    val phoneNumber by viewModel.phoneNumber.collectAsState()
+    val otp by viewModel.otp.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState()
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
-    ) {
-        Column(
+    val context = LocalContext.current
+    val activity = context as? Activity
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Handle auth state changes
+    LaunchedEffect(authState) {
+        when (val state = authState) {
+            is AuthUiState.Success -> {
+                if (state.userId?.displayName == null) {
+                    // New user, navigate to profile setup
+                    onNavigateToProfile()
+                } else {
+                    // Existing user, navigate to home
+                    onNavigateToHome()
+                }
+                viewModel.resetState()
+            }
+            is AuthUiState.Error -> {
+                snackbarHostState.showSnackbar(state.message)
+            }
+            else -> Unit
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+        ) {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                AuthHeader()
+
+                Spacer(modifier = Modifier.height(48.dp))
+
+                when (authState) {
+                    is AuthUiState.Idle, is AuthUiState.Error -> {
+                        PhoneInputSection(
+                            phoneNumber = phoneNumber,
+                            onPhoneChange = { viewModel.updatePhoneNumber(it.filter(Char::isDigit).take(PHONE_LENGTH)) },
+                            onSendOtp = {
+                                activity?.let { viewModel.sendOtp(it) }
+                            },
+                            isEnabled = phoneNumber.length == PHONE_LENGTH,
+                        )
+                    }
+                    is AuthUiState.Loading -> {
+                        LoadingState()
+                    }
+                    is AuthUiState.OtpSent -> {
+                        OtpInputSection(
+                            phoneNumber = phoneNumber,
+                            otp = otp,
+                            onOtpChange = { viewModel.updateOtp(it.filter(Char::isDigit).take(OTP_LENGTH)) },
+                            onVerifyOtp = { viewModel.verifyOtp() },
+                            onChangeNumber = {
+                                viewModel.resetState()
+                                viewModel.updatePhoneNumber("")
+                                viewModel.updateOtp("")
+                            },
+                            onResendOtp = {
+                                activity?.let { viewModel.sendOtp(it) }
+                            },
+                            isEnabled = otp.length == OTP_LENGTH,
+                        )
+                    }
+                    else -> Unit
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                FooterNote()
+            }
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
             modifier =
                 Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            AuthHeader()
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp),
+        )
+    }
+}
 
-            Spacer(modifier = Modifier.height(48.dp))
-
-            if (!isOtpSent) {
-                PhoneInputSection(
-                    phoneNumber = phoneNumber,
-                    onPhoneChange = { input ->
-                        phoneNumber = input.filter(Char::isDigit).take(PHONE_LENGTH)
-                    },
-                    onSendOtp = { isOtpSent = true },
-                    isEnabled = phoneNumber.length == PHONE_LENGTH,
-                )
-            } else {
-                OtpInputSection(
-                    phoneNumber = phoneNumber,
-                    otp = otp,
-                    onOtpChange = { input ->
-                        otp = input.filter(Char::isDigit).take(OTP_LENGTH)
-                    },
-                    onVerifyOtp = {
-                        onNavigateToProfile()
-                    },
-                    onChangeNumber = {
-                        otp = ""
-                        isOtpSent = false
-                    },
-                    onResendOtp = {},
-                    isEnabled = otp.length == OTP_LENGTH,
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            FooterNote()
-        }
+@Composable
+private fun LoadingState() {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        CircularProgressIndicator(modifier = Modifier.size(48.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Please wait...",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -126,6 +198,7 @@ private fun PhoneInputSection(
         onValueChange = onPhoneChange,
         modifier = Modifier.fillMaxWidth(),
         label = { Text("Phone Number") },
+        prefix = { Text("+91 ") },
         placeholder = { Text("9000000000") },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
         singleLine = true,
@@ -173,7 +246,7 @@ private fun OtpInputSection(
     Spacer(modifier = Modifier.height(8.dp))
 
     Text(
-        text = "Sent to $phoneNumber",
+        text = "Sent to +91 $phoneNumber",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )

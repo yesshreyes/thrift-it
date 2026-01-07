@@ -73,18 +73,19 @@ class AuthViewModel
 
         // Send OTP to phone number
         fun sendOtp(activity: Activity) {
-            val phone = _phoneNumber.value
+            val phone = "+91${_phoneNumber.value}" // Add country code
 
             if (!isValidPhoneNumber(phone)) {
                 _authState.value = AuthUiState.Error("Invalid phone number")
                 return
             }
 
+            _authState.value = AuthUiState.Loading
+
             viewModelScope.launch {
                 val callbacks =
                     object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                         override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                            // Auto-verification
                             signInWithCredential(credential)
                         }
 
@@ -101,21 +102,19 @@ class AuthViewModel
                         }
                     }
 
-                authRepository
-                    .sendVerificationCode(phone, activity, callbacks)
-                    .collect { result ->
-                        when (result) {
-                            is Result.Loading -> _authState.value = AuthUiState.Loading
-                            is Result.Success -> {
-                                if (result.data == "auto_verified") {
-                                    _authState.value = AuthUiState.Loading
-                                }
-                            }
-                            is Result.Error -> {
-                                _authState.value = AuthUiState.Error(result.message)
+                authRepository.sendVerificationCode(phone, activity, callbacks).collect { result ->
+                    when (result) {
+                        is Result.Loading -> { /* Already loading */ }
+                        is Result.Success -> {
+                            if (result.data == "auto_verified") {
+                                // Auto verification successful
                             }
                         }
+                        is Result.Error -> {
+                            _authState.value = AuthUiState.Error(result.message)
+                        }
                     }
+                }
             }
         }
 

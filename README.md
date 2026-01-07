@@ -105,14 +105,13 @@
 ## 📋 Phase 3: Core Features - Authentication 
 
 ### Phone Authentication
-- [ ] Implement Firebase Phone Auth in `AuthRepository`
-- [ ] Create OTP input UI in `AuthScreen`
-- [ ] Handle OTP verification
-- [ ] Show loading/error states
-- [ ] Navigate to profile setup on success
-- [ ] Store auth state in ViewModel
-- [ ] Handle auth persistence
-- [ ] Write Firestore security rules
+- [x] Implement Firebase Phone Auth in `AuthRepository`
+- [x] Create OTP input UI in `AuthScreen`
+- [x] Handle OTP verification
+- [x] Show loading/error states
+- [x] Navigate to profile setup on success
+- [x] Store auth state in ViewModel
+- [x] Handle auth persistence
 
 ### Profile Setup
 - [ ] Request location permission using Accompanist
