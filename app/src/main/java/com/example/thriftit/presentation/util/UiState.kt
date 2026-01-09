@@ -36,7 +36,6 @@ sealed class UiState<out T> {
         }
 }
 
-// Screen-specific UI states
 sealed class AuthUiState {
     data object Idle : AuthUiState()
 
@@ -46,12 +45,8 @@ sealed class AuthUiState {
         val verificationId: String,
     ) : AuthUiState()
 
-    data class PhoneVerificationSent(
-        val verificationId: String,
-    ) : AuthUiState()
-
     data class Success(
-        val userId: User?,
+        val user: User?,
     ) : AuthUiState()
 
     data class Error(

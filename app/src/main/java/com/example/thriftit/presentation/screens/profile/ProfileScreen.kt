@@ -1,101 +1,264 @@
 package com.example.thriftit.presentation.screens.profile
 
-import androidx.compose.foundation.layout.Arrangement
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.thriftit.presentation.util.LocationHelper
+import com.example.thriftit.presentation.util.UiState
+import com.example.thriftit.presentation.viewmodel.ProfileViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.MultiplePermissionsState
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import kotlinx.coroutines.launch
 
-private const val NAME_MAX_LENGTH = 50
-private const val ADDRESS_MAX_LENGTH = 200
-
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun ProfileSetupScreen(onNavigateToMain: () -> Unit = {}) {
-    var name by rememberSaveable { mutableStateOf("") }
-    var phoneNumber by rememberSaveable { mutableStateOf("") }
-    var address by rememberSaveable { mutableStateOf("") }
-    var city by rememberSaveable { mutableStateOf("") }
-    var locationEnabled by rememberSaveable { mutableStateOf(false) }
+fun ProfileSetupScreen(
+    onNavigateToMain: () -> Unit,
+    viewModel: ProfileViewModel = hiltViewModel(),
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
-    ) {
-        Column(
+    // ViewModel states
+    val displayName by viewModel.displayName.collectAsStateWithLifecycle()
+    val location by viewModel.location.collectAsStateWithLifecycle()
+    val coordinates by viewModel.coordinates.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val profileState by viewModel.profileState.collectAsStateWithLifecycle()
+    val validationErrors by viewModel.validationErrors.collectAsStateWithLifecycle()
+
+    // Location permission state
+    val locationPermissionsState =
+        rememberMultiplePermissionsState(
+            permissions =
+                listOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                ),
+        )
+
+    var isLoadingLocation by remember { mutableStateOf(false) }
+
+    // Handle profile save success
+    LaunchedEffect(profileState) {
+        when (profileState) {
+            is UiState.Success -> {
+                snackbarHostState.showSnackbar("Profile saved successfully!")
+                viewModel.resetProfileState()
+                onNavigateToMain()
+            }
+            is UiState.Error -> {
+                snackbarHostState.showSnackbar(
+                    (profileState as UiState.Error).message ?: "Error saving profile",
+                )
+                viewModel.resetProfileState()
+            }
+            else -> {}
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { paddingValues ->
+        Surface(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                    .padding(paddingValues),
+            color = MaterialTheme.colorScheme.background,
         ) {
-            ProfileHeader()
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                ProfileHeader()
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-            ProfileForm(
-                name = name,
-                phoneNumber = phoneNumber,
-                address = address,
-                city = city,
-                locationEnabled = locationEnabled,
-                onNameChange = { input ->
-                    name = input.take(NAME_MAX_LENGTH)
-                },
-                onPhoneChange = { input ->
-                    phoneNumber = input.filter(Char::isDigit).take(10)
-                },
-                onAddressChange = { input ->
-                    address = input.take(ADDRESS_MAX_LENGTH)
-                },
-                onCityChange = { city = it },
-                onEnableLocation = { locationEnabled = !locationEnabled },
-            )
+                // Name Field
+                OutlinedTextField(
+                    value = displayName,
+                    onValueChange = { viewModel.updateDisplayName(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Full Name") },
+                    placeholder = { Text("John Doe") },
+                    singleLine = true,
+                    isError = validationErrors.containsKey("displayName"),
+                    supportingText = {
+                        validationErrors["displayName"]?.let {
+                            Text(it, color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        ),
+                )
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            SaveButton(
-//                enabled =
-//                    name.isNotBlank() &&
-//                        phoneNumber.length == 10 &&
-//                        address.isNotBlank() &&
-//                        city.isNotBlank() &&
-//                        locationEnabled,
-                onClick = {
-                    onNavigateToMain()
-                },
-            )
+                // Phone Number Field (Read-only)
+                OutlinedTextField(
+                    value = currentUser?.phoneNumber ?: "",
+                    onValueChange = {},
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Phone Number") },
+                    singleLine = true,
+                    enabled = false,
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            disabledBorderColor = MaterialTheme.colorScheme.outline,
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            InfoNote()
+                // Location Field
+                OutlinedTextField(
+                    value = location,
+                    onValueChange = { viewModel.updateLocation(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Location/Address") },
+                    placeholder = { Text("City, State") },
+                    minLines = 2,
+                    maxLines = 3,
+                    isError = validationErrors.containsKey("location"),
+                    supportingText = {
+                        validationErrors["location"]?.let {
+                            Text(it, color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        ),
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                LocationPermissionCard(
+                    locationPermissionsState = locationPermissionsState,
+                    isLoadingLocation = isLoadingLocation,
+                    onEnableLocation = {
+                        when {
+                            locationPermissionsState.allPermissionsGranted -> {
+                                scope.launch {
+                                    // ✅ scope.launch needed
+                                    isLoadingLocation = true
+                                    val coords = LocationHelper.getCurrentLocation(context)
+                                    coords?.let { (lat, lng) ->
+                                        viewModel.updateLocationFromCoordinates(lat, lng)
+                                        snackbarHostState.showSnackbar("Location coordinates captured!")
+                                    } ?: run {
+                                        snackbarHostState.showSnackbar("Unable to get location. Try GPS ON + Google Maps first")
+                                    }
+                                    isLoadingLocation = false
+                                }
+                            }
+                            locationPermissionsState.shouldShowRationale -> {
+                                scope.launch {
+                                    // ✅ scope.launch needed
+                                    snackbarHostState.showSnackbar("Location needed for nearby listings")
+                                }
+                            }
+                            else -> {
+                                locationPermissionsState.launchMultiplePermissionRequest()
+                            }
+                        }
+                    },
+                    onOpenSettings = { openAppSettings(context) },
+                )
+
+                validationErrors["coordinates"]?.let {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Save Button
+                Button(
+                    onClick = { viewModel.saveProfile() },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                    enabled = profileState !is UiState.Loading,
+                ) {
+                    if (profileState is UiState.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    } else {
+                        Text(
+                            text = "Save Profile",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                InfoNote()
+            }
         }
     }
 }
@@ -108,9 +271,7 @@ private fun ProfileHeader() {
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.primary,
     )
-
     Spacer(modifier = Modifier.height(8.dp))
-
     Text(
         text = "Help buyers and sellers find you",
         style = MaterialTheme.typography.bodyMedium,
@@ -119,166 +280,69 @@ private fun ProfileHeader() {
     )
 }
 
-@Composable
-private fun ProfileForm(
-    name: String,
-    phoneNumber: String,
-    address: String,
-    city: String,
-    locationEnabled: Boolean,
-    onNameChange: (String) -> Unit,
-    onPhoneChange: (String) -> Unit,
-    onAddressChange: (String) -> Unit,
-    onCityChange: (String) -> Unit,
-    onEnableLocation: () -> Unit,
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        // Name Field
-        OutlinedTextField(
-            value = name,
-            onValueChange = onNameChange,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Full Name") },
-            placeholder = { Text("John Doe") },
-            singleLine = true,
-            colors =
-                OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                ),
-        )
-
-        // Phone Number Field (Read-only/Pre-filled)
-        OutlinedTextField(
-            value = phoneNumber,
-            onValueChange = onPhoneChange,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Phone Number") },
-            placeholder = { Text("9000000000") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            singleLine = true,
-            enabled = false,
-            colors =
-                OutlinedTextFieldDefaults.colors(
-                    disabledBorderColor = MaterialTheme.colorScheme.outline,
-                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
-        )
-
-        // Address Field
-        OutlinedTextField(
-            value = address,
-            onValueChange = onAddressChange,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Address") },
-            placeholder = { Text("Street, Area, Landmark") },
-            minLines = 2,
-            maxLines = 3,
-            colors =
-                OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                ),
-        )
-
-        // City Field
-        OutlinedTextField(
-            value = city,
-            onValueChange = onCityChange,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("City") },
-            placeholder = { Text("Mumbai") },
-            singleLine = true,
-            colors =
-                OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                ),
-        )
-
-        // Location Permission Button
-        LocationPermissionCard(
-            locationEnabled = locationEnabled,
-            onEnableLocation = onEnableLocation,
-        )
-    }
-}
-
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun LocationPermissionCard(
-    locationEnabled: Boolean,
+    locationPermissionsState: MultiplePermissionsState, // ✅ Fixed param
+    isLoadingLocation: Boolean,
     onEnableLocation: () -> Unit,
+    onOpenSettings: () -> Unit, // ✅ Fixed param
+    context: Context = LocalContext.current,
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = "Location Access",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface,
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
+        // Debug info
         Text(
-            text = "Enable location to show items near you and help others find your listings",
+            text =
+                buildString {
+                    append("Permissions: ${locationPermissionsState.allPermissionsGranted}")
+                    append(" | GPS OK: ${LocationHelper.hasLocationPermission(context)}")
+                },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        // Main button
         OutlinedButton(
             onClick = onEnableLocation,
             modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoadingLocation,
         ) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = "Location",
-                tint =
-                    if (locationEnabled) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-            )
-            Spacer(modifier = Modifier.padding(4.dp))
+            if (isLoadingLocation) {
+                CircularProgressIndicator(modifier = Modifier.size(20.dp))
+            } else {
+                Icon(Icons.Default.LocationOn, contentDescription = null)
+            }
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = if (locationEnabled) "Location Enabled ✓" else "Enable Location",
-                color =
-                    if (locationEnabled) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
+                text =
+                    when {
+                        isLoadingLocation -> "Getting Location..."
+                        locationPermissionsState.allPermissionsGranted -> "Get Current Location"
+                        else -> "Enable Location"
                     },
             )
         }
-    }
-}
 
-@Composable
-private fun SaveButton(
-//    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    Button(
-        onClick = onClick,
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-//        enabled = enabled,
-    ) {
-        Text(
-            text = "Save Profile",
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Medium,
-        )
+        // Settings button (if permanently denied)
+        if (!locationPermissionsState.allPermissionsGranted && !locationPermissionsState.shouldShowRationale) {
+            Spacer(modifier = Modifier.height(8.dp))
+            TextButton(
+                onClick = onOpenSettings,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Open App Settings", color = MaterialTheme.colorScheme.error)
+            }
+        }
     }
 }
 
@@ -293,10 +357,11 @@ private fun InfoNote() {
     )
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-private fun ProfileSetupScreenPreview() {
-    MaterialTheme {
-        ProfileSetupScreen()
-    }
+private fun openAppSettings(context: Context) {
+    val intent =
+        Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", context.packageName, null),
+        )
+    context.startActivity(intent)
 }

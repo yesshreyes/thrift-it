@@ -47,6 +47,11 @@ fun ThriftItNavGraph(
                         popUpTo<AuthRoute> { inclusive = true }
                     }
                 },
+                onNavigateToHome = {
+                    navController.navigate(MainRoute) {
+                        popUpTo<AuthRoute> { inclusive = true }
+                    }
+                },
             )
         }
 
@@ -56,6 +61,7 @@ fun ThriftItNavGraph(
                 onNavigateToMain = {
                     navController.navigate(MainRoute) {
                         popUpTo<ProfileSetupRoute> { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
             )

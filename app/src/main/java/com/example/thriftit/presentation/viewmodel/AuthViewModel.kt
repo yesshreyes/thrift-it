@@ -13,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -44,19 +45,24 @@ class AuthViewModel
         // Check if user is already logged in
         private fun checkAuthStatus() {
             viewModelScope.launch {
-                if (authRepository.isUserLoggedIn()) {
-                    authRepository.getCurrentUserProfile().collect { result ->
-                        when (result) {
-                            is Result.Success -> {
-                                _currentUser.value = result.data
-                                _authState.value = AuthUiState.Success(result.data)
-                            }
-                            is Result.Error -> {
-                                _authState.value = AuthUiState.Error(result.message)
-                            }
-                            is Result.Loading -> { /* Loading state */ }
-                        }
+                if (!authRepository.isUserLoggedIn()) return@launch
+
+                val result =
+                    authRepository
+                        .getCurrentUserProfile()
+                        .first { it is Result.Success || it is Result.Error }
+
+                when (result) {
+                    is Result.Success -> {
+                        _currentUser.value = result.data
+                        _authState.value = AuthUiState.Success(result.data)
                     }
+
+                    is Result.Error -> {
+                        _authState.value = AuthUiState.Error(result.message)
+                    }
+
+                    else -> Unit
                 }
             }
         }
@@ -137,15 +143,22 @@ class AuthViewModel
 
             viewModelScope.launch {
                 val result = authRepository.verifyOtpAndSignIn(verificationId, code)
+
                 when (result) {
                     is Result.Success -> {
-                        _currentUser.value = result.data
-                        _authState.value = AuthUiState.Success(result.data)
+                        // AFTER SIGN-IN, LOAD USER PROFILE
+                        authRepository.getCurrentUserProfile().collect { res ->
+                            if (res is Result.Success) {
+                                _currentUser.value = res.data
+                                _authState.value = AuthUiState.Success(res.data)
+                                return@collect
+                            }
+                        }
                     }
                     is Result.Error -> {
                         _authState.value = AuthUiState.Error(result.message)
                     }
-                    is Result.Loading -> { /* Already loading */ }
+                    else -> Unit
                 }
             }
         }

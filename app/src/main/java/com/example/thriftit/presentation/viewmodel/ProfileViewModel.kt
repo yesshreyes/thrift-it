@@ -14,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -53,26 +54,39 @@ class ProfileViewModel
         private val _validationErrors = MutableStateFlow<Map<String, String>>(emptyMap())
         val validationErrors: StateFlow<Map<String, String>> = _validationErrors.asStateFlow()
 
+        // Location permission state
+        private val _locationPermissionGranted = MutableStateFlow(false)
+        val locationPermissionGranted: StateFlow<Boolean> = _locationPermissionGranted.asStateFlow()
+
         init {
             loadCurrentUser()
+            checkProfileCompletion()
+        }
+
+        private fun checkProfileCompletion() {
+            viewModelScope.launch {
+                val user = _currentUser.value
+                if (user != null && user.displayName?.isNotBlank() == true && user.location?.isNotBlank() == true) {
+                    // Profile complete - notify UI
+                    _profileState.value = UiState.Success(Unit)
+                }
+            }
         }
 
         private fun loadCurrentUser() {
             viewModelScope.launch {
-                authRepository.getCurrentUserProfile().collect { result ->
-                    when (result) {
-                        is Result.Loading -> _profileState.value = UiState.Loading
-                        is Result.Error -> _profileState.value = UiState.Error(result.message)
-                        is Result.Success -> {
-                            val user = result.data
-                            _currentUser.value = user
-                            _displayName.value = user?.displayName.orEmpty()
-                            _location.value = user?.location.orEmpty()
-                            _coordinates.value = user?.coordinates
-                            _profileImageUrl.value = user?.profileImageUrl
-                            _profileState.value = UiState.Idle
-                        }
-                    }
+                val result =
+                    authRepository
+                        .getCurrentUserProfile()
+                        .first { it is Result.Success || it is Result.Error }
+
+                if (result is Result.Success) {
+                    val user = result.data
+                    _currentUser.value = user
+                    _displayName.value = user?.displayName.orEmpty()
+                    _location.value = user?.location.orEmpty()
+                    _coordinates.value = user?.coordinates
+                    _profileImageUrl.value = user?.profileImageUrl
                 }
             }
         }
@@ -124,7 +138,15 @@ class ProfileViewModel
         private fun validateForm(): Boolean {
             validateDisplayName()
             validateLocation()
-            return _validationErrors.value.isEmpty()
+
+            val errors = _validationErrors.value.toMutableMap()
+
+            if (_coordinates.value == null) {
+                errors["coordinates"] = "Please fetch current location"
+            }
+
+            _validationErrors.value = errors
+            return errors.isEmpty()
         }
 
         fun saveProfile() {
@@ -160,7 +182,7 @@ class ProfileViewModel
                 val updatedUser =
                     User(
                         uid = uid,
-                        phoneNumber = existing?.phoneNumber.orEmpty(),
+                        phoneNumber = authRepository.getCurrentUserPhoneNumber(),
                         displayName = _displayName.value.trim(),
                         profileImageUrl = imageUrl,
                         location = _location.value.trim(),
@@ -184,5 +206,22 @@ class ProfileViewModel
 
         fun resetProfileState() {
             _profileState.value = UiState.Idle
+        }
+
+        // Update location permission status
+        fun updateLocationPermission(granted: Boolean) {
+            _locationPermissionGranted.value = granted
+        }
+
+        fun updateLocationFromCoordinates(
+            latitude: Double,
+            longitude: Double,
+        ) {
+            _coordinates.value = Coordinates(latitude, longitude)
+
+            // Clear coordinate validation error
+            val errors = _validationErrors.value.toMutableMap()
+            errors.remove("coordinates")
+            _validationErrors.value = errors
         }
     }

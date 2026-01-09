@@ -114,20 +114,17 @@
 - [x] Handle auth persistence
 
 ### Profile Setup
-- [ ] Request location permission using Accompanist
-- [ ] Get user's current location using FusedLocationProvider
-- [ ] Create profile form (name, address, phone)
-- [ ] Upload profile data to Firestore `/users/{userId}`
-- [ ] Cache user data in Room
-- [ ] Navigate to main app on completion
-- [ ] Handle permission denied scenarios
+- [x] Request location permission using Accompanist
+- [x] Get user's current location using FusedLocationProvider
+- [x] Create profile form (name, address, phone)
+- [x] Upload profile data to Firestore `/users/{userId}`
+- [x] Navigate to main app on completion
+- [x] Handle permission denied scenarios
 
 ### Session Management
-- [ ] Check if user is already logged in on app start
-- [ ] Navigate accordingly (Auth vs Main)
-- [ ] Implement sign out functionality
-- [ ] Clear Room cache on sign out
-- [ ] Clear Firebase auth state
+- [x] Check if user is already logged in on app start
+- [x] Navigate accordingly (Auth vs Main)
+- [x] Implement sign out functionality
 
 ---
 
@@ -262,6 +259,8 @@
   - [ ] Emit data from Room
   - [ ] Sync Firestore in background
   - [ ] Update Room on Firestore changes
+- [ ] Clear Room cache on sign out
+- [ ] Cache user data in Room
 
 ### Network State Handling
 - [ ] Create `NetworkObserver` to monitor connectivity

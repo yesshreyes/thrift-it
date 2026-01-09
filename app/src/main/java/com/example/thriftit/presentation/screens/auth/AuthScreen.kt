@@ -60,17 +60,17 @@ fun AuthScreen(
     LaunchedEffect(authState) {
         when (val state = authState) {
             is AuthUiState.Success -> {
-                if (state.userId?.displayName == null) {
-                    // New user, navigate to profile setup
+                snackbarHostState.showSnackbar("Login successful!")
+
+                if (state.user?.displayName.isNullOrBlank()) {
                     onNavigateToProfile()
                 } else {
-                    // Existing user, navigate to home
                     onNavigateToHome()
                 }
-                viewModel.resetState()
             }
             is AuthUiState.Error -> {
                 snackbarHostState.showSnackbar(state.message)
+                viewModel.resetState()
             }
             else -> Unit
         }

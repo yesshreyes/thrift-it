@@ -3,11 +3,13 @@ package com.example.thriftit.data.repository
 import com.example.thriftit.data.local.dao.UserDao
 import com.example.thriftit.data.mappers.toDomain
 import com.example.thriftit.data.mappers.toEntity
+import com.example.thriftit.data.mappers.toFirestoreMap
 import com.example.thriftit.data.mappers.toUser
 import com.example.thriftit.domain.models.Coordinates
 import com.example.thriftit.domain.models.User
 import com.example.thriftit.domain.util.Result
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -70,15 +72,10 @@ class UserRepository
                 // Update Firestore
                 usersCollection
                     .document(user.uid)
-                    .update(
-                        mapOf(
-                            "displayName" to updatedUser.displayName,
-                            "profileImageUrl" to updatedUser.profileImageUrl,
-                            "location" to updatedUser.location,
-                            "latitude" to updatedUser.coordinates?.latitude,
-                            "longitude" to updatedUser.coordinates?.longitude,
-                            "lastUpdated" to updatedUser.lastUpdated,
-                        ),
+                    .set(
+                        updatedUser.toFirestoreMap(),
+                        com.google.firebase.firestore.SetOptions
+                            .merge(),
                     ).await()
 
                 // Update local database
@@ -101,13 +98,14 @@ class UserRepository
                 // Update Firestore
                 usersCollection
                     .document(userId)
-                    .update(
+                    .set(
                         mapOf(
                             "location" to location,
                             "latitude" to coordinates?.latitude,
                             "longitude" to coordinates?.longitude,
                             "lastUpdated" to timestamp,
                         ),
+                        SetOptions.merge(),
                     ).await()
 
                 // Update local database

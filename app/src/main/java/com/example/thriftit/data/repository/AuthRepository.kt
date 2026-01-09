@@ -35,7 +35,7 @@ class AuthRepository
 
         fun isUserLoggedIn(): Boolean = auth.currentUser != null
 
-        suspend fun sendVerificationCode(
+        fun sendVerificationCode(
             phoneNumber: String,
             activity: Activity,
             callbacks: PhoneAuthProvider.OnVerificationStateChangedCallbacks,
@@ -83,38 +83,26 @@ class AuthRepository
         suspend fun verifyOtpAndSignIn(
             verificationId: String,
             otp: String,
-        ): Result<User> {
+        ): Result<String> { // Return verificationId, NOT User
             return try {
                 val credential = PhoneAuthProvider.getCredential(verificationId, otp)
                 val authResult = auth.signInWithCredential(credential).await()
-                val firebaseUser =
-                    authResult.user
-                        ?: return Result.Error(Exception("User is null"))
-
-                val userDoc = usersCollection.document(firebaseUser.uid).get().await()
-
+                val firebaseUser = authResult.user ?: return Result.Error(Exception("User is null"))
                 val user =
-                    if (userDoc.exists()) {
-                        userDoc.data?.toUser()
-                            ?: return Result.Error(Exception("Failed to parse user data"))
-                    } else {
-                        val newUser =
-                            User(
-                                uid = firebaseUser.uid,
-                                phoneNumber = firebaseUser.phoneNumber ?: "",
-                                displayName = null,
-                                profileImageUrl = null,
-                                location = null,
-                                coordinates = null,
-                                lastUpdated = System.currentTimeMillis(),
-                            )
+                    User(
+                        uid = firebaseUser.uid,
+                        phoneNumber = firebaseUser.phoneNumber ?: "",
+                        displayName = null,
+                        profileImageUrl = null,
+                        location = null,
+                        coordinates = null,
+                        lastUpdated = System.currentTimeMillis(),
+                    )
 
-                        usersCollection.document(newUser.uid).set(newUser.toFirestoreMap()).await()
-                        newUser
-                    }
-
+                // Save locally so Profile screen can read it
                 userDao.insertUser(user.toEntity())
-                Result.Success(user)
+                // ✅ DON'T create minimal user - just sign in
+                Result.Success(firebaseUser.uid) // Return UID only
             } catch (e: Exception) {
                 Result.Error(e)
             }
@@ -227,4 +215,6 @@ class AuthRepository
                 Result.Error(e)
             }
         }
+
+        fun getCurrentUserPhoneNumber(): String = auth.currentUser?.phoneNumber.orEmpty()
     }
