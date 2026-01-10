@@ -21,7 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -32,11 +32,14 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterBottomSheet(
-    onDismiss: () -> Unit = {},
-    onApplyFilters: () -> Unit = {},
+    initialPriceRange: ClosedFloatingPointRange<Float>,
+    initialMaxDistance: Float,
+    onDismiss: () -> Unit,
+    onClearAll: () -> Unit,
+    onApplyFilters: (ClosedFloatingPointRange<Float>, Float) -> Unit,
 ) {
-    var priceRange by rememberSaveable { mutableStateOf(0f..100000f) }
-    var maxDistance by rememberSaveable { mutableFloatStateOf(10f) }
+    var priceRange by remember { mutableStateOf(initialPriceRange) }
+    var maxDistance by remember { mutableFloatStateOf(initialMaxDistance) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -50,8 +53,13 @@ fun FilterBottomSheet(
             onClearAll = {
                 priceRange = 0f..100000f
                 maxDistance = 10f
+                onClearAll()
+                onDismiss()
             },
-            onApplyFilters = onApplyFilters,
+            onApplyFilters = {
+                onApplyFilters(priceRange, maxDistance)
+                onDismiss()
+            },
         )
     }
 }

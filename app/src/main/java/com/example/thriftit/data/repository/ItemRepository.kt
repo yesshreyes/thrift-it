@@ -1,5 +1,6 @@
 package com.example.thriftit.data.repository
 
+import android.util.Log
 import com.example.thriftit.data.local.dao.ItemDao
 import com.example.thriftit.data.mappers.toDomain
 import com.example.thriftit.data.mappers.toDomainList
@@ -9,7 +10,6 @@ import com.example.thriftit.domain.models.Item
 import com.example.thriftit.domain.models.ItemCategory
 import com.example.thriftit.domain.util.Result
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.awaitClose
@@ -39,7 +39,6 @@ class ItemRepository
                 val registration =
                     itemsCollection
                         .whereEqualTo("isAvailable", true)
-                        .orderBy("createdAt", Query.Direction.DESCENDING)
                         .addSnapshotListener { snapshot, error ->
                             if (error != null) {
                                 trySend(Result.Error(error))
@@ -47,7 +46,12 @@ class ItemRepository
                             }
 
                             if (snapshot != null) {
-                                val items = snapshot.documents.mapNotNull { it.data?.toItem() }
+                                val items =
+                                    snapshot.documents.mapNotNull { doc ->
+                                        val item = doc.data?.toItem(doc.id)
+                                        Log.d("ITEM_DEBUG", "id=${doc.id}, images=${item?.imageUrls}")
+                                        item
+                                    }
                                 trySend(Result.Success(items))
 
                                 // Cache items locally
@@ -67,7 +71,7 @@ class ItemRepository
         suspend fun getItemById(itemId: String): Result<Item?> =
             try {
                 val doc = itemsCollection.document(itemId).get().await()
-                val item = doc.data?.toItem()
+                val item = doc.data?.toItem(doc.id)
                 Result.Success(item)
             } catch (e: Exception) {
                 // Try to get from local database
@@ -109,7 +113,6 @@ class ItemRepository
                     itemsCollection
                         .whereEqualTo("category", category.name)
                         .whereEqualTo("isAvailable", true)
-                        .orderBy("createdAt", Query.Direction.DESCENDING)
                         .addSnapshotListener { snapshot, error ->
                             if (error != null) {
                                 trySend(Result.Error(error))
@@ -117,7 +120,10 @@ class ItemRepository
                             }
 
                             if (snapshot != null) {
-                                val items = snapshot.documents.mapNotNull { it.data?.toItem() }
+                                val items =
+                                    snapshot.documents.mapNotNull { doc ->
+                                        doc.data?.toItem(doc.id)
+                                    }
                                 trySend(Result.Success(items))
                             }
                         }
@@ -133,7 +139,6 @@ class ItemRepository
                 val registration =
                     itemsCollection
                         .whereEqualTo("sellerId", sellerId)
-                        .orderBy("createdAt", Query.Direction.DESCENDING)
                         .addSnapshotListener { snapshot, error ->
                             if (error != null) {
                                 trySend(Result.Error(error))
@@ -141,7 +146,10 @@ class ItemRepository
                             }
 
                             if (snapshot != null) {
-                                val items = snapshot.documents.mapNotNull { it.data?.toItem() }
+                                val items =
+                                    snapshot.documents.mapNotNull { doc ->
+                                        doc.data?.toItem(doc.id)
+                                    }
                                 trySend(Result.Success(items))
                             }
                         }
@@ -167,7 +175,7 @@ class ItemRepository
                 val items =
                     snapshot.documents
                         .mapNotNull { doc ->
-                            doc.data?.toItem()?.let { item ->
+                            doc.data?.toItem(doc.id)?.let { item ->
                                 item.coordinates?.let { coords ->
                                     val distance =
                                         calculateDistance(

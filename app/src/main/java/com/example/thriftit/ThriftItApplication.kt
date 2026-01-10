@@ -1,15 +1,28 @@
 package com.example.thriftit
 
 import android.app.Application
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import com.cloudinary.android.MediaManager
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class ThriftItApplication : Application() {
+class ThriftItApplication :
+    Application(),
+    SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
         initCloudinary()
     }
+
+    override fun newImageLoader(context: PlatformContext): ImageLoader =
+        ImageLoader
+            .Builder(context)
+            .components {
+                add(OkHttpNetworkFetcherFactory())
+            }.build()
 
     private fun initCloudinary() {
         val config =
@@ -23,7 +36,7 @@ class ThriftItApplication : Application() {
         try {
             MediaManager.init(this, config)
         } catch (e: IllegalStateException) {
-            // MediaManager already initialized (safe to ignore)
+            // MediaManager already initialized
         }
     }
 }

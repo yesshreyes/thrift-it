@@ -217,4 +217,29 @@ class AuthRepository
         }
 
         fun getCurrentUserPhoneNumber(): String = auth.currentUser?.phoneNumber.orEmpty()
+
+        suspend fun getCurrentUserCoordinatesFromFirestore(): com.example.thriftit.domain.models.Coordinates? {
+            val userId = getCurrentUserId() ?: return null
+
+            return try {
+                val snapshot =
+                    firestore
+                        .collection("users")
+                        .document(userId)
+                        .get()
+                        .await()
+
+                val lat = snapshot.getDouble("latitude")
+                val lng = snapshot.getDouble("longitude")
+
+                if (lat != null && lng != null) {
+                    com.example.thriftit.domain.models
+                        .Coordinates(lat, lng)
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                null
+            }
+        }
     }

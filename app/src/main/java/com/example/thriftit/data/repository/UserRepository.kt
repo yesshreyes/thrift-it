@@ -1,5 +1,6 @@
 package com.example.thriftit.data.repository
 
+import android.util.Log
 import com.example.thriftit.data.local.dao.UserDao
 import com.example.thriftit.data.mappers.toDomain
 import com.example.thriftit.data.mappers.toEntity
@@ -44,7 +45,12 @@ class UserRepository
                             }
 
                             if (snapshot?.exists() == true) {
+                                Log.d("CONNECT_DEBUG", "RAW USER SNAPSHOT = ${snapshot.data}")
+
                                 val user = snapshot.data?.toUser()
+
+                                // 🔍 LOG AFTER MAPPING
+                                Log.d("CONNECT_DEBUG", "MAPPED USER = $user")
                                 trySend(Result.Success(user))
 
                                 // Cache locally
@@ -152,5 +158,16 @@ class UserRepository
                 Result.Success(Unit)
             } catch (e: Exception) {
                 Result.Error(e)
+            }
+
+        suspend fun getUserPhone(userId: String): String? =
+            try {
+                usersCollection
+                    .document(userId)
+                    .get()
+                    .await()
+                    .getString("phone")
+            } catch (e: Exception) {
+                null
             }
     }

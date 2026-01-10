@@ -91,7 +91,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.coil.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.cloudinary.android)
@@ -110,6 +109,8 @@ dependencies {
     implementation(libs.dagger)
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 }
 
 configurations.all {

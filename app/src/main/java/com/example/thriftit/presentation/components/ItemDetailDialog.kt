@@ -28,13 +28,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 
 data class ItemDetail(
     val name: String,
     val price: Double,
     val description: String,
-    val imageUrl: String,
+    val imageUrls: String,
     val itemAge: String,
     val distance: Double,
     val sellerName: String,
@@ -44,6 +44,7 @@ data class ItemDetail(
 @Composable
 fun ItemDetailDialog(
     item: ItemDetail,
+    sellerPhone: String?,
     onDismiss: () -> Unit = {},
     onConnect: () -> Unit = {},
 ) {
@@ -83,7 +84,7 @@ fun ItemDetailDialog(
 
                 // Item Image
                 AsyncImage(
-                    model = item.imageUrl,
+                    model = item.imageUrls,
                     contentDescription = item.name,
                     modifier =
                         Modifier
@@ -159,6 +160,7 @@ fun ItemDetailDialog(
                                 .fillMaxWidth()
                                 .height(50.dp),
                         shape = RoundedCornerShape(12.dp),
+                        enabled = true,
                     ) {
                         Text(
                             text = "Connect with Seller",
@@ -210,12 +212,13 @@ private fun ItemDetailDialogPreview() {
                     name = "iPhone 12",
                     price = 35000.0,
                     description = "Excellent condition ",
-                    imageUrl = "https://via.placeholder.com/300",
+                    imageUrls = "https://via.placeholder.com/300",
                     itemAge = "1 year old",
                     distance = 2.5,
                     sellerName = "John Doe",
                     sellerPhone = "+919876543210",
                 ),
+            sellerPhone = "",
         )
     }
 }

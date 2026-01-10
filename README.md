@@ -131,50 +131,49 @@
 ## 📋 Phase 4: Core Features - Buy Screen 
 
 ### Data Fetching
-- [ ] Fetch items from Firestore in `ItemRepository`
-- [ ] Expose items from repository to ViewModel
-- [ ] Update UI using StateFlow in Compose
-- [ ] Handle empty state (no items)
-- [ ] Handle loading state
-- [ ] Handle Firestore errors
+- [x] Fetch items from Firestore in `ItemRepository`
+- [x] Expose items from repository to ViewModel
+- [x] Update UI using StateFlow in Compose
+- [x] Handle empty state (no items)
+- [x] Handle loading state
+- [x] Handle Firestore errors
 
 ### Grid Layout Implementation
-- [ ] Implement `LazyVerticalGrid` with 2 columns
-- [ ] Display item cards with:
+- [x] Implement `LazyVerticalGrid` with 2 columns
+- [x] Display item cards with:
   - [ ] Image (using Coil)
-  - [ ] Name
-  - [ ] Price
-  - [ ] Description
-  - [ ] Item age
-  - [ ] Distance from user
-- [ ] Calculate distance using Haversine formula
-- [ ] Format distance (e.g., "2.5 km away")
+  - [x] Name
+  - [x] Price
+  - [x] Description
+  - [x] Distance from user
+- [x] Calculate distance using Haversine formula
+- [x] Format distance (e.g., "2.5 km away")
 
 ### Search Functionality
-- [ ] Add search bar in top bar
-- [ ] Implement search logic in repository
-- [ ] Filter items by keywords
-- [ ] Update UI with search results
-- [ ] Handle empty search results
-- [ ] Add clear search button
+- [x] Add search bar in top bar
+- [x] Implement search logic in repository
+- [x] Filter items by keywords
+- [x] Update UI with search results
+- [x] Handle empty search results
+- [x] Add clear search button
 
 ### Filter Functionality
-- [ ] Create filter bottom sheet UI
-- [ ] Add price range slider
-- [ ] Add distance range slider
-- [ ] Apply filters to Firestore query
-- [ ] Update UI with filtered results
-- [ ] Show active filters indicator
-- [ ] Add clear filters option
+- [x] Create filter bottom sheet UI
+- [x] Add price range slider
+- [x] Add distance range slider
+- [x] Apply filters to Firestore query
+- [x] Update UI with filtered results
+- [x] Show active filters indicator
+- [x] Add clear filters option
 
 ### Item Detail & WhatsApp Integration
-- [ ] Create item detail dialog/bottom sheet
-- [ ] Show full item details on card click
-- [ ] Add "Connect" button
+- [x] Create item detail dialog/bottom sheet
+- [x] Show full item details on card click
+- [x] Add "Connect" button
 - [ ] Get seller's phone from Firestore
-- [ ] Create WhatsApp deep link with pre-filled message
-- [ ] Launch WhatsApp with Intent
-- [ ] Handle WhatsApp not installed case
+- [x] Create WhatsApp deep link with pre-filled message
+- [x] Launch WhatsApp with Intent
+- [x] Handle WhatsApp not installed case
 
 ---
 
