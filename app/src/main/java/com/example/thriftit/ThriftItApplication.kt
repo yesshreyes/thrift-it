@@ -1,6 +1,10 @@
 package com.example.thriftit
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
@@ -15,6 +19,7 @@ class ThriftItApplication :
     override fun onCreate() {
         super.onCreate()
         initCloudinary()
+        createNotificationChannel()
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader =
@@ -23,6 +28,27 @@ class ThriftItApplication :
             .components {
                 add(OkHttpNetworkFetcherFactory())
             }.build()
+
+    // ---------------- NOTIFICATION CHANNEL ----------------
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel =
+                NotificationChannel(
+                    "upload_channel",
+                    "Item Uploads",
+                    NotificationManager.IMPORTANCE_HIGH,
+                ).apply {
+                    description = "Notifications for item uploads"
+                }
+
+            val manager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+    // ---------------- CLOUDINARY INIT ----------------
 
     private fun initCloudinary() {
         val config =

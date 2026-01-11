@@ -1,17 +1,31 @@
 package com.example.thriftit.presentation.screens.sell
 
+import android.Manifest
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,33 +47,125 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.example.thriftit.domain.models.ItemCondition
+import com.example.thriftit.presentation.util.UploadUiState
+import com.example.thriftit.presentation.util.createImageUri
+import com.example.thriftit.presentation.viewmodel.SellViewModel
 
 private const val NAME_MAX_LENGTH = 50
 private const val DESC_MAX_LENGTH = 300
 private const val PRICE_MAX_LENGTH = 8
 
 @Composable
-fun SellScreen() {
+fun SellScreen(viewModel: SellViewModel = hiltViewModel()) {
+    val context = LocalContext.current
+    val selectedImages by viewModel.selectedImages.collectAsStateWithLifecycle()
+
     var itemName by rememberSaveable { mutableStateOf("") }
     var price by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
-    var itemAge by rememberSaveable { mutableStateOf("") }
-    var selectedImageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-    var isUploading by rememberSaveable { mutableStateOf(false) }
+    val selectedCondition by viewModel.condition.collectAsStateWithLifecycle()
+    val validationErrors by viewModel.validationErrors.collectAsStateWithLifecycle()
+
+    // ---------------- CAMERA PERMISSION ----------------
+
+    val cameraPermissionLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { granted ->
+            if (!granted) {
+                Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+    // ---------------- GALLERY PICKER ----------------
+
+    val galleryPicker =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.PickVisualMedia(),
+        ) { uri ->
+            uri?.let { viewModel.addImage(it) }
+        }
+
+    // ---------------- CAMERA PICKER ----------------
+
+    val cameraUri = remember { mutableStateOf<Uri?>(null) }
+
+    val cameraLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.TakePicture(),
+        ) { success ->
+            if (success) {
+                cameraUri.value?.let { viewModel.addImage(it) }
+            }
+        }
+
+    val notificationPermissionLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { granted ->
+            if (!granted) {
+                Toast
+                    .makeText(
+                        context,
+                        "Notifications disabled. You won't get upload alerts.",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+            }
+        }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(
+                Manifest.permission.POST_NOTIFICATIONS,
+            )
+        }
+    }
+
+    val uploadState by viewModel.uploadState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uploadState) {
+        when (uploadState) {
+            is UploadUiState.Success -> {
+                Toast.makeText(context, "Item uploaded successfully", Toast.LENGTH_SHORT).show()
+                showUploadSuccessNotification(context)
+                viewModel.resetForm()
+            }
+
+            is UploadUiState.Error -> {
+                Toast
+                    .makeText(
+                        context,
+                        (uploadState as UploadUiState.Error).message,
+                        Toast.LENGTH_LONG,
+                    ).show()
+            }
+
+            else -> Unit
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -74,48 +180,218 @@ fun SellScreen() {
         ) {
             SellHeader()
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(Modifier.height(24.dp))
 
-            ImagePickerSection(
-                selectedImageUri = selectedImageUri,
-                onPickImage = {
-                },
-                onRemoveImage = { selectedImageUri = null },
+            // ---------------- IMAGE PICKER ----------------
+
+            Text(
+                text = "Item Photos",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(Modifier.height(12.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(
+                    onClick = {
+                        galleryPicker.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                        )
+                    },
+                ) {
+                    Text("Gallery")
+                }
+
+                Button(
+                    onClick = {
+                        if (
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.CAMERA,
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            val uri = createImageUri(context)
+                            cameraUri.value = uri
+                            cameraLauncher.launch(uri)
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    },
+                ) {
+                    Text("Camera")
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // ---------------- IMAGE PREVIEW ----------------
+
+            if (selectedImages.isNotEmpty()) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(selectedImages) { uri ->
+                        Box {
+                            AsyncImage(
+                                model = uri,
+                                contentDescription = null,
+                                modifier =
+                                    Modifier
+                                        .size(120.dp)
+                                        .clip(RoundedCornerShape(12.dp)),
+                                contentScale = ContentScale.Crop,
+                            )
+
+                            IconButton(
+                                onClick = { viewModel.removeImage(uri) },
+                                modifier =
+                                    Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp),
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(50),
+                                    color = MaterialTheme.colorScheme.errorContainer,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Remove",
+                                        modifier = Modifier.padding(4.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(180.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(
+                                2.dp,
+                                MaterialTheme.colorScheme.outline,
+                                RoundedCornerShape(12.dp),
+                            ).clickable {
+                                galleryPicker.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                                )
+                            },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Default.AddPhotoAlternate,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text("Tap to add images")
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            // ---------------- FORM ----------------
 
             SellForm(
                 itemName = itemName,
                 price = price,
                 description = description,
-                itemAge = itemAge,
-                onItemNameChange = { itemName = it.take(NAME_MAX_LENGTH) },
-                onPriceChange = { input ->
-                    price = input.filter(Char::isDigit).take(PRICE_MAX_LENGTH)
+                selectedCondition = selectedCondition,
+                conditionError = validationErrors["condition"],
+                onItemNameChange = {
+                    itemName = it.take(NAME_MAX_LENGTH)
+                    viewModel.updateTitle(itemName)
                 },
-                onDescriptionChange = { description = it.take(DESC_MAX_LENGTH) },
-                onItemAgeChange = { itemAge = it },
+                onPriceChange = {
+                    price = it.filter(Char::isDigit).take(PRICE_MAX_LENGTH)
+                    viewModel.updatePrice(price)
+                },
+                onDescriptionChange = {
+                    description = it.take(DESC_MAX_LENGTH)
+                    viewModel.updateDescription(description)
+                },
+                onConditionChange = viewModel::updateCondition,
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(Modifier.height(32.dp))
+
+            val uploadState by viewModel.uploadState.collectAsStateWithLifecycle()
 
             UploadButton(
                 isEnabled =
                     itemName.isNotBlank() &&
                         price.isNotBlank() &&
                         description.isNotBlank() &&
-                        itemAge.isNotBlank() &&
-                        selectedImageUri != null &&
-                        !isUploading,
-                isLoading = isUploading,
-                onClick = { /* TODO: Add upload logic */ },
+                        selectedImages.isNotEmpty() &&
+                        uploadState !is UploadUiState.Uploading,
+                isLoading = uploadState is UploadUiState.Uploading,
+                onClick = {
+                    viewModel.uploadItem()
+                },
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
             InfoNote()
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ItemConditionDropdown(
+    selectedCondition: ItemCondition?,
+    error: String?,
+    onSelect: (ItemCondition) -> Unit,
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+    ) {
+        OutlinedTextField(
+            value = selectedCondition?.displayName ?: "",
+            onValueChange = {},
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+            readOnly = true,
+            isError = error != null,
+            label = { Text("Item Condition") },
+            placeholder = { Text("Select condition") },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            ItemCondition.entries.forEach { condition ->
+                DropdownMenuItem(
+                    text = { Text(condition.displayName) },
+                    onClick = {
+                        onSelect(condition)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
+
+    if (error != null) {
+        Text(
+            text = error,
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
 }
 
@@ -234,21 +510,13 @@ private fun SellForm(
     itemName: String,
     price: String,
     description: String,
-    itemAge: String,
+    selectedCondition: ItemCondition?,
+    conditionError: String?,
     onItemNameChange: (String) -> Unit,
     onPriceChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
-    onItemAgeChange: (String) -> Unit,
+    onConditionChange: (ItemCondition) -> Unit,
 ) {
-    val ageOptions =
-        listOf(
-            "Brand New",
-            "Less than 6 months",
-            "6 months - 1 year",
-            "1 - 2 years",
-            "2 - 3 years",
-            "More than 3 years",
-        )
     var expanded by rememberSaveable { mutableStateOf(false) }
 
     Column(
@@ -308,44 +576,11 @@ private fun SellForm(
             },
         )
 
-        // Item Age Dropdown
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-        ) {
-            OutlinedTextField(
-                value = itemAge,
-                onValueChange = {},
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(),
-                readOnly = true,
-                label = { Text("Item Age") },
-                placeholder = { Text("Select age") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                colors =
-                    OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    ),
-            )
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-            ) {
-                ageOptions.forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(option) },
-                        onClick = {
-                            onItemAgeChange(option)
-                            expanded = false
-                        },
-                    )
-                }
-            }
-        }
+        ItemConditionDropdown(
+            selectedCondition = selectedCondition,
+            error = conditionError,
+            onSelect = onConditionChange,
+        )
     }
 }
 
@@ -364,10 +599,15 @@ private fun UploadButton(
         enabled = isEnabled,
     ) {
         if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(24.dp),
-                color = MaterialTheme.colorScheme.onPrimary,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+                Spacer(Modifier.width(12.dp))
+                Text("Uploading…")
+            }
         } else {
             Text(
                 text = "Upload Item",
@@ -376,6 +616,38 @@ private fun UploadButton(
             )
         }
     }
+}
+
+private fun showUploadSuccessNotification(context: Context) {
+    val intent =
+        context.packageManager
+            .getLaunchIntentForPackage(context.packageName)
+            ?.apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+
+    val pendingIntent =
+        PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+    val notification =
+        NotificationCompat
+            .Builder(context, "upload_channel")
+            .setSmallIcon(android.R.drawable.stat_notify_more)
+            .setContentTitle("Item Uploaded 🎉")
+            .setContentText("Your item is now visible to nearby buyers")
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
+
+    NotificationManagerCompat
+        .from(context)
+        .notify(System.currentTimeMillis().toInt(), notification)
 }
 
 @Composable

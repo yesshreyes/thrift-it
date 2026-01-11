@@ -180,71 +180,58 @@
 ## 📋 Phase 5: Core Features - Sell Screen 
 
 ### Image Picker
-- [ ] Request camera permission
-- [ ] Implement `ActivityResultContracts.PickVisualMedia()`
-- [ ] Add option to pick from gallery
-- [ ] Add option to take photo
-- [ ] Show selected image preview
-- [ ] Handle permission denied
-- [ ] Compress image before upload
+- [x] Request camera permission
+- [x] Implement `ActivityResultContracts.PickVisualMedia()`
+- [x] Add option to pick from gallery
+- [x] Add option to take photo
+- [x] Show selected image preview
+- [x] Handle permission denied
+- [x] Compress image before upload
 
 ### Upload Form
-- [ ] Create form fields:
-  - [ ] Item name (TextField)
-  - [ ] Price (TextField with number input)
-  - [ ] Description (TextField multiline)
-  - [ ] Item age/condition (Dropdown/Radio)
-- [ ] Add form validation
-- [ ] Show validation errors
-- [ ] Disable submit until valid
+- [x] Create form fields:
+  - [x] Item name (TextField)
+  - [x] Price (TextField with number input)
+  - [x] Description (TextField multiline)
+  - [x] Item condition (Dropdown/Radio)
+- [x] Add form validation
+- [x] Show validation errors
+- [x] Disable submit until valid
 
 ### Firebase Upload
-- [ ] Upload image to Firebase Storage
-- [ ] Get download URL
-- [ ] Create item document in Firestore with:
-  - [ ] Image URL
-  - [ ] User ID (seller)
-  - [ ] Location (lat/lng)
-  - [ ] Timestamp
-  - [ ] All form data
-- [ ] Show upload progress
-- [ ] Handle upload errors
-
-### Notifications
-- [ ] Create notification channel
-- [ ] Show success notification when uploaded
-- [ ] Add notification permission request (Android 13+)
-- [ ] Notification should open app on click
-
-### Post-Upload
+- [x] Upload image to Firebase Storage
+- [x] Get download URL
+- [x] Create item document in Firestore with:
+  - [x] Image URL
+  - [x] User ID (seller)
+  - [x] Location (lat/lng)
+  - [x] Timestamp
+  - [x] All form data
+- [x] Show upload progress
+- [x] Handle upload errors
+- [x] Show success message
 - [ ] Clear form after successful upload
-- [ ] Show success message
 - [ ] Navigate to Buy screen to see uploaded item
-- [ ] Add option to upload another item
+- [ ] Category Selection
 
 ---
 
 ## 📋 Phase 6: Core Features - Settings & Notifications 
 
 ### Settings Screen
-- [ ] Display user profile info
+- [x] Display user profile info
 - [ ] Add edit profile option
-- [ ] Add update location button
+- [x] Add update location button
 - [ ] Update location in Firestore and Room
-- [ ] Add address management
-- [ ] Show app version
-- [ ] Add sign out button
-- [ ] Confirm sign out with dialog
+- [x] Show app version
+- [x] Add sign out button
 - [ ] Clear all data on sign out
 
-### Notification Screen
-- [ ] Display list of notifications
-- [ ] Store notifications in Room 
-- [ ] Show notification for: 
-  - [ ] Item uploaded successfully
-- [ ] Mark notifications as read
-- [ ] Delete notifications
-- [ ] Handle empty state
+### Notifications
+- [x] Create notification channel
+- [x] Show success notification when uploaded
+- [x] Add notification permission request (Android 13+)
+- [x] Notification should open app on click
 
 ---
 
@@ -360,16 +347,6 @@
 - [ ] Test location permission flow
 - [ ] Test sign out and data clearing
 - [ ] Test on different Android versions
-
-### Performance Optimization
-- [ ] Optimize image loading with Coil caching
-- [ ] Optimize LazyGrid performance
-- [ ] Optimize database queries
-- [ ] Reduce Firestore reads
-- [ ] Implement proper image compression
-- [ ] Profile app with Android Profiler
-- [ ] Fix memory leaks
-- [ ] Reduce app size
 
 ### Code Quality
 - [ ] Extract hardcoded strings to resources

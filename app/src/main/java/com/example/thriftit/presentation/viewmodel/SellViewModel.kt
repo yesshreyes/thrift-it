@@ -5,12 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.thriftit.data.repository.AuthRepository
 import com.example.thriftit.data.repository.UploadRepository
+import com.example.thriftit.data.repository.UserRepository
 import com.example.thriftit.domain.models.Coordinates
 import com.example.thriftit.domain.models.Item
 import com.example.thriftit.domain.models.ItemCategory
 import com.example.thriftit.domain.models.ItemCondition
 import com.example.thriftit.domain.util.Result
-import com.example.thriftit.presentation.util.UploadUiState // Use your existing one
+import com.example.thriftit.presentation.util.UploadUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,10 +25,14 @@ class SellViewModel
     constructor(
         private val uploadRepository: UploadRepository,
         private val authRepository: AuthRepository,
+        private val userRepository: UserRepository,
     ) : ViewModel() {
-        // Use your existing UploadUiState
+        // ---------------- UPLOAD STATE ----------------
+
         private val _uploadState = MutableStateFlow<UploadUiState>(UploadUiState.Idle)
         val uploadState: StateFlow<UploadUiState> = _uploadState.asStateFlow()
+
+        // ---------------- FORM STATE ----------------
 
         private val _title = MutableStateFlow("")
         val title: StateFlow<String> = _title.asStateFlow()
@@ -50,23 +55,107 @@ class SellViewModel
         private val _coordinates = MutableStateFlow<Coordinates?>(null)
         val coordinates: StateFlow<Coordinates?> = _coordinates.asStateFlow()
 
+        // ---------------- IMAGE STATE ----------------
+
         private val _selectedImages = MutableStateFlow<List<Uri>>(emptyList())
         val selectedImages: StateFlow<List<Uri>> = _selectedImages.asStateFlow()
+
+        // ---------------- VALIDATION ----------------
 
         private val _validationErrors = MutableStateFlow<Map<String, String>>(emptyMap())
         val validationErrors: StateFlow<Map<String, String>> = _validationErrors.asStateFlow()
 
-        // ... all the update functions remain the same
+    /* ============================================================
+       IMAGE HANDLING
+       ============================================================ */
+
+        init {
+            loadCurrentUserLocation()
+        }
+
+        private fun loadCurrentUserLocation() {
+            val userId = authRepository.getCurrentUserId() ?: return
+
+            viewModelScope.launch {
+                userRepository.getUserById(userId).collect { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            val user = result.data ?: return@collect
+
+                            _location.value = user.location ?: ""
+                            _coordinates.value = user.coordinates
+
+                            // 🔥 DEBUG LOG (important)
+                            android.util.Log.d(
+                                "SELL_LOCATION",
+                                "Loaded user location: ${user.coordinates}",
+                            )
+                        }
+
+                        else -> Unit
+                    }
+                }
+            }
+        }
+
+        fun addImage(uri: Uri) {
+            _selectedImages.value =
+                if (uri !in _selectedImages.value) {
+                    _selectedImages.value + uri
+                } else {
+                    _selectedImages.value
+                }
+        }
+
+        fun removeImage(uri: Uri) {
+            _selectedImages.value = _selectedImages.value - uri
+        }
+
+    /* ============================================================
+       FORM UPDATERS (OPTIONAL BUT CLEAN)
+       ============================================================ */
+
+        fun updateTitle(value: String) {
+            _title.value = value
+        }
+
+        fun updateDescription(value: String) {
+            _description.value = value
+        }
+
+        fun updatePrice(value: String) {
+            _price.value = value
+        }
+
+        fun updateCategory(value: ItemCategory?) {
+            _category.value = value
+        }
+
+        fun updateCondition(value: ItemCondition?) {
+            _condition.value = value
+        }
+
+        fun updateLocation(value: String) {
+            _location.value = value
+        }
+
+        fun updateCoordinates(value: Coordinates?) {
+            _coordinates.value = value
+        }
+
+    /* ============================================================
+       UPLOAD LOGIC
+       ============================================================ */
 
         fun uploadItem() {
-//        if (!validateForm()) {
-//            _uploadState.value = UploadUiState.Error("Please fix validation errors")
-//            return
-//        }
-
             val userId = authRepository.getCurrentUserId()
             if (userId == null) {
                 _uploadState.value = UploadUiState.Error("User not authenticated")
+                return
+            }
+
+            if (!validateForm()) {
+                _uploadState.value = UploadUiState.Error("Please fix the errors")
                 return
             }
 
@@ -79,7 +168,7 @@ class SellViewModel
                         title = _title.value,
                         description = _description.value,
                         price = _price.value.toDouble(),
-                        category = _category.value!!,
+                        category = _category.value ?: ItemCategory.OTHER,
                         condition = _condition.value!!,
                         imageUrls = emptyList(),
                         sellerId = userId,
@@ -101,6 +190,10 @@ class SellViewModel
             }
         }
 
+    /* ============================================================
+       RESET
+       ============================================================ */
+
         fun resetForm() {
             _title.value = ""
             _description.value = ""
@@ -112,5 +205,34 @@ class SellViewModel
             _selectedImages.value = emptyList()
             _validationErrors.value = emptyMap()
             _uploadState.value = UploadUiState.Idle
+        }
+
+        private fun validateForm(): Boolean {
+            val errors = mutableMapOf<String, String>()
+
+            if (_title.value.isBlank()) {
+                errors["title"] = "Item name is required"
+            }
+
+            if (_price.value.isBlank()) {
+                errors["price"] = "Price is required"
+            } else if (_price.value.toDoubleOrNull() == null) {
+                errors["price"] = "Invalid price"
+            }
+
+            if (_description.value.isBlank()) {
+                errors["description"] = "Description is required"
+            }
+
+            if (_condition.value == null) {
+                errors["condition"] = "Please select item condition"
+            }
+
+            if (_selectedImages.value.isEmpty()) {
+                errors["images"] = "At least one image is required"
+            }
+
+            _validationErrors.value = errors
+            return errors.isEmpty()
         }
     }

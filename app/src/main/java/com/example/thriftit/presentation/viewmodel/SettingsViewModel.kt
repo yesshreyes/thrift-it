@@ -67,10 +67,13 @@ class SettingsViewModel
         fun signOut() {
             viewModelScope.launch {
                 _signOutState.value = UiState.Loading
+
                 when (val res = authRepository.signOut()) {
-                    is Result.Success -> _signOutState.value = UiState.Success(Unit)
+                    is Result.Success -> {
+                        _signOutState.value = UiState.Success(Unit)
+                    }
                     is Result.Error -> _signOutState.value = UiState.Error(res.message)
-                    is Result.Loading -> Unit
+                    else -> Unit
                 }
             }
         }
