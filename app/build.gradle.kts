@@ -108,8 +108,8 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.javax.inject)
     implementation(libs.dagger)
-    implementation("com.google.android.gms:play-services-location:21.3.0")
-    implementation("com.google.accompanist:accompanist-permissions:0.37.3")
+    implementation(libs.play.services.location)
+    implementation(libs.accompanist.permissions)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 }

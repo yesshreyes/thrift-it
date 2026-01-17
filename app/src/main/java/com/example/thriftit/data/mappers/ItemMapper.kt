@@ -1,5 +1,6 @@
 package com.example.thriftit.data.mappers
 
+import android.net.Uri
 import com.example.thriftit.data.local.entities.ItemEntity
 import com.example.thriftit.domain.models.Coordinates
 import com.example.thriftit.domain.models.Item
@@ -25,24 +26,34 @@ fun ItemEntity.toDomain(): Item =
                 null
             },
         isAvailable = this.isAvailable,
+        pendingUpload = pendingUpload,
+        isSynced = isSynced,
+        lastUpdated = lastUpdated,
     )
 
 // Domain to Entity
-fun Item.toEntity(): ItemEntity =
+fun Item.toEntity(
+    pendingUpload: Boolean = false,
+    isSynced: Boolean = true,
+    localImageUris: List<Uri> = emptyList(),
+): ItemEntity =
     ItemEntity(
-        id = this.id,
-        title = this.title,
-        description = this.description,
-        price = this.price,
-        category = this.category.name,
-        condition = this.condition.name,
-        imageUrls = this.imageUrls.joinToString(","),
-        sellerId = this.sellerId,
-        location = this.location,
-        latitude = this.coordinates?.latitude,
-        longitude = this.coordinates?.longitude,
-        isAvailable = this.isAvailable,
-        isSynced = false,
+        id = id,
+        title = title,
+        description = description,
+        price = price,
+        category = category.name,
+        condition = condition.name,
+        imageUrls = imageUrls.joinToString(","),
+        sellerId = sellerId,
+        location = location,
+        latitude = coordinates?.latitude,
+        longitude = coordinates?.longitude,
+        isAvailable = isAvailable,
+        pendingUpload = pendingUpload, // ✅ FIXED
+        isSynced = isSynced, // ✅ FIXED
+        localImageUris = localImageUris, // ✅ FIXED
+        lastUpdated = lastUpdated,
     )
 
 // List extensions

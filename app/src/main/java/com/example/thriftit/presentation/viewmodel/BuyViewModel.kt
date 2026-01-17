@@ -45,6 +45,9 @@ class BuyViewModel
         private val _isFetchingSellerPhone = MutableStateFlow(false)
         val isFetchingSellerPhone: StateFlow<Boolean> = _isFetchingSellerPhone.asStateFlow()
 
+        private val _isRefreshing = MutableStateFlow(false)
+        val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
         val hasActiveFilters: Boolean
             get() =
                 _selectedCategory.value != null ||
@@ -63,7 +66,19 @@ class BuyViewModel
         private val allItems = MutableStateFlow<List<Item>>(emptyList())
 
         init {
-            loadItems()
+            observeItems()
+        }
+
+        // ---------------- DATA ----------------
+
+        private fun observeItems() {
+            viewModelScope.launch {
+                itemRepository.observeItems().collect { items ->
+                    val withDistance = attachDistance(items)
+                    allItems.value = withDistance
+                    applyFilters()
+                }
+            }
         }
 
         // -------------------- DATA LOADING --------------------
@@ -90,51 +105,31 @@ class BuyViewModel
             _sellerPhone.value = null
         }
 
-        private fun loadItems() {
+        fun refreshItems() {
             viewModelScope.launch {
-                itemRepository.getAllItems().collect { result ->
-                    _uiState.value =
-                        when (result) {
-                            is Result.Loading -> UiState.Loading
-                            is Result.Success -> {
-                                val withDistance = attachDistance(result.data)
-                                allItems.value = withDistance
-                                UiState.Success(applyFiltersToList(withDistance))
-                            }
-                            is Result.Error -> UiState.Error(result.message)
-                        }
+                _isRefreshing.value = true
+
+                try {
+                    itemRepository.refreshOnce()
+                } finally {
+                    _isRefreshing.value = false
                 }
             }
-        }
-
-        fun refreshItems() {
-            loadItems()
         }
 
         // -------------------- SEARCH --------------------
 
         fun updateSearchQuery(query: String) {
             _searchQuery.value = query
-            if (query.isBlank()) {
-                applyFilters()
-            } else {
-                searchItems(query)
-            }
-        }
 
-        private fun searchItems(query: String) {
             viewModelScope.launch {
-                _uiState.value = UiState.Loading
-                itemRepository.searchItems(query).collect { result ->
-                    _uiState.value =
-                        when (result) {
-                            is Result.Loading -> UiState.Loading
-                            is Result.Success -> {
-                                val withDistance = attachDistance(result.data)
-                                UiState.Success(applyFiltersToList(withDistance))
-                            }
-                            is Result.Error -> UiState.Error(result.message)
-                        }
+                if (query.isBlank()) {
+                    applyFilters()
+                } else {
+                    itemRepository.searchItems(query).collect { items ->
+                        val withDistance = attachDistance(items)
+                        _uiState.value = UiState.Success(applyFiltersToList(withDistance))
+                    }
                 }
             }
         }

@@ -3,6 +3,10 @@ package com.example.thriftit.presentation.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.thriftit.core.network.NetworkObserver
+import com.example.thriftit.core.network.NetworkStatus
+import com.example.thriftit.data.local.dao.ItemDao
+import com.example.thriftit.data.mappers.toEntity
 import com.example.thriftit.data.repository.AuthRepository
 import com.example.thriftit.data.repository.UploadRepository
 import com.example.thriftit.data.repository.UserRepository
@@ -14,9 +18,12 @@ import com.example.thriftit.domain.util.Result
 import com.example.thriftit.presentation.util.UploadUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,7 +33,17 @@ class SellViewModel
         private val uploadRepository: UploadRepository,
         private val authRepository: AuthRepository,
         private val userRepository: UserRepository,
+        private val itemDao: ItemDao,
+        private val networkObserver: NetworkObserver,
     ) : ViewModel() {
+        private val networkStatus =
+            networkObserver.networkStatus
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5_000),
+                    initialValue = NetworkStatus.UNAVAILABLE,
+                )
+
         // ---------------- UPLOAD STATE ----------------
 
         private val _uploadState = MutableStateFlow<UploadUiState>(UploadUiState.Idle)
@@ -160,11 +177,9 @@ class SellViewModel
             }
 
             viewModelScope.launch {
-                _uploadState.value = UploadUiState.Uploading(0f)
-
                 val item =
                     Item(
-                        id = "",
+                        id = UUID.randomUUID().toString(),
                         title = _title.value,
                         description = _description.value,
                         price = _price.value.toDouble(),
@@ -176,6 +191,24 @@ class SellViewModel
                         coordinates = _coordinates.value,
                         isAvailable = true,
                     )
+
+                // 🚨 OFFLINE → DO NOT SET Uploading
+                if (networkStatus.value != NetworkStatus.AVAILABLE) {
+                    itemDao.insertItem(
+                        item.toEntity(
+                            pendingUpload = true,
+                            isSynced = false,
+                            localImageUris = _selectedImages.value,
+                        ),
+                    )
+
+                    _uploadState.value = UploadUiState.Success
+                    resetForm()
+                    return@launch
+                }
+
+                // 🌐 ONLINE → ONLY HERE Uploading is valid
+                _uploadState.value = UploadUiState.Uploading(0f)
 
                 uploadRepository
                     .uploadItemWithImages(item, _selectedImages.value)

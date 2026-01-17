@@ -15,6 +15,9 @@ interface ItemDao {
     fun getAllItems(): Flow<List<ItemEntity>>
 
     @Query("SELECT * FROM items WHERE id = :itemId")
+    fun getItemByIdFlow(itemId: String): Flow<ItemEntity?>
+
+    @Query("SELECT * FROM items WHERE id = :itemId")
     suspend fun getItemById(itemId: String): ItemEntity?
 
     @Query("SELECT * FROM items WHERE seller_id = :sellerId")
@@ -44,9 +47,15 @@ interface ItemDao {
     @Query("DELETE FROM items")
     suspend fun deleteAllItems()
 
-    @Query("SELECT * FROM items WHERE is_synced = 0")
-    suspend fun getUnsyncedItems(): List<ItemEntity>
-
-    @Query("UPDATE items SET is_synced = 1 WHERE id = :itemId")
+    @Query("UPDATE items SET is_synced = 1, pending_upload = 0  WHERE id = :itemId")
     suspend fun markItemAsSynced(itemId: String)
+
+    @Query(
+        """
+    SELECT * FROM items 
+    WHERE pending_upload = 1 
+      AND is_synced = 0
+""",
+    )
+    suspend fun getUnsyncedItems(): List<ItemEntity>
 }

@@ -238,41 +238,99 @@
 ## 📋 Phase 7: Offline-First Implementation
 
 ### Offline Architecture
-- [ ] Make Room the single source of truth
-- [ ] Always read from Room, not Firestore directly
-- [ ] Set Firestore offline persistence enabled
-- [ ] Implement repository pattern properly:
-  - [ ] Emit data from Room
-  - [ ] Sync Firestore in background
-  - [ ] Update Room on Firestore changes
-- [ ] Clear Room cache on sign out
-- [ ] Cache user data in Room
+- [x] Make Room the single source of truth
+- [x] Always read from Room, not Firestore directly
+- [x] Set Firestore offline persistence enabled
+- [x] Implement repository pattern properly:
+  - [x] Emit data from Room
+  - [x] Sync Firestore in background
+  - [x] Update Room on Firestore changes
+- [x] Clear Room cache on sign out
+- [x] Cache user data in Room
 
 ### Network State Handling
-- [ ] Create `NetworkObserver` to monitor connectivity
-- [ ] Show network status indicator in UI
-- [ ] Queue uploads when offline
-- [ ] Sync when back online
-- [ ] Handle sync conflicts
+- [x] Create `NetworkObserver` to monitor connectivity
+- [x] Show network status indicator in UI
+- [x] Queue uploads when offline
+- [x] Sync when back online
 
 ### Offline Upload Queue
-- [ ] Store pending uploads in Room
-- [ ] Mark items as "pending_upload"
-- [ ] Update status on success
+- [x] Store pending uploads in Room
+- [x] Mark items as "pending_upload"
+- [x] Update status on success
 - [ ] Show pending indicator in UI
+- [ ] Fix sync after network available
 
 ### Pull to Refresh
-- [ ] Add `SwipeRefresh` to Buy screen
-- [ ] Trigger Firestore fetch on pull
-- [ ] Update Room with new data
-- [ ] Show refresh indicator
+- [x] Add `SwipeRefresh` to Buy screen
+- [x] Trigger Firestore fetch on pull
+- [x] Update Room with new data
+- [x] Show refresh indicator
 
-### Pagination & Sync
+### Pagination
 - [ ] Pagination logic for Buy and other screens
+- [ ] Handle sync conflicts
 
 ---
 
-## 📋 Phase 8: State Management & Error Handling (Week 5)
+## 📋 Phase 8: UI/UX Polish & Beautification (Week 6)
+
+### Splash Screen
+- [ ] Create animated splash screen
+- [ ] Add "THRIFT IT" logo
+- [ ] Add brand colors
+- [ ] Show for 2 seconds
+- [ ] Navigate based on auth state
+
+### App Icon
+- [ ] Design app icon
+- [ ] Create adaptive icon (foreground + background)
+- [ ] Generate all required sizes
+- [ ] Update manifest with icon
+- [ ] Test on different launchers
+
+### Theme & Branding
+- [ ] Define color palette (primary, secondary, accent)
+- [ ] Create Material3 theme
+- [ ] Use consistent typography
+
+### UI Improvements
+- [ ] Polish item card design
+- [ ] Improve spacing and padding
+- [ ] Add subtle shadows and elevations
+- [ ] Improve button styles
+- [ ] Add icons where appropriate
+- [ ] Ensure proper contrast ratios
+- [ ] Test on different screen sizes
+
+---
+
+## 📋 Phase 9: Testing & Optimization 
+
+### Functional Testing
+- [ ] Test complete auth flow
+- [ ] Test offline scenarios
+- [ ] Test pagination behavior
+- [ ] Test search and filters
+- [ ] Test image upload
+- [ ] Test WhatsApp integration
+- [ ] Test location permission flow
+- [ ] Test sign out and data clearing
+- [ ] Test on different Android versions
+
+### Code Quality
+- [ ] Extract hardcoded strings to resources
+- [ ] Use constants for magic numbers
+- [ ] Refactor duplicate code
+- [ ] Ensure proper package structure
+
+### Documentation
+- [ ] Update README
+- [ ] Add LICENSE file
+
+---
+
+## 📋 Phase 10: State Management & Error Handling (Week 5)
 
 ### State Management
 - [ ] Implement proper UiState for all screens
@@ -298,72 +356,6 @@
 - [ ] Handle no items in area
 - [ ] Handle user profile incomplete
 - [ ] Handle Firebase quota exceeded
-
----
-
-## 📋 Phase 9: UI/UX Polish & Beautification (Week 6)
-
-### Splash Screen
-- [ ] Create animated splash screen
-- [ ] Add "THRIFT IT" logo
-- [ ] Add brand colors
-- [ ] Show for 2 seconds
-- [ ] Navigate based on auth state
-
-### App Icon
-- [ ] Design app icon
-- [ ] Create adaptive icon (foreground + background)
-- [ ] Generate all required sizes
-- [ ] Update manifest with icon
-- [ ] Test on different launchers
-
-### Theme & Branding
-- [ ] Define color palette (primary, secondary, accent)
-- [ ] Create Material3 theme
-- [ ] Add "THRIFT IT" branding in top bar
-- [ ] Use consistent typography
-- [ ] Add brand personality to copy
-
-### UI Improvements
-- [ ] Polish item card design
-- [ ] Improve spacing and padding
-- [ ] Add subtle shadows and elevations
-- [ ] Improve button styles
-- [ ] Add icons where appropriate
-- [ ] Ensure proper contrast ratios
-- [ ] Test on different screen sizes
-
----
-
-## 📋 Phase 10: Testing & Optimization 
-
-### Functional Testing
-- [ ] Test complete auth flow
-- [ ] Test offline scenarios
-- [ ] Test pagination behavior
-- [ ] Test search and filters
-- [ ] Test image upload
-- [ ] Test WhatsApp integration
-- [ ] Test location permission flow
-- [ ] Test sign out and data clearing
-- [ ] Test on different Android versions
-
-### Code Quality
-- [ ] Extract hardcoded strings to resources
-- [ ] Use constants for magic numbers
-- [ ] Refactor duplicate code
-- [ ] Ensure proper package structure
-
-### Documentation
-- [ ] Update README with:
-  - [ ] Project description
-  - [ ] Features list
-  - [ ] Setup instructions
-  - [ ] Screenshots
-  - [ ] Tech stack
-- [ ] Add code documentation (KDoc)
-- [ ] Create CONTRIBUTING.md
-- [ ] Add LICENSE file
 
 ---
 

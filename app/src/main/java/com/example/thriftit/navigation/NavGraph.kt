@@ -80,11 +80,7 @@ fun MainScreen() {
 
     Scaffold(
         topBar = {
-            ThriftItTopBar(
-                onNotificationClick = {
-                    mainNavController.navigate(NotificationRoute)
-                },
-            )
+            ThriftItTopBar()
         },
         bottomBar = {
             BottomNavigationBar(navController = mainNavController)

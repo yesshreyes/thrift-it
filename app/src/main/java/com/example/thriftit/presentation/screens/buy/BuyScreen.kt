@@ -36,6 +36,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -72,51 +75,68 @@ fun BuyScreen(viewModel: BuyViewModel = hiltViewModel()) {
     var showFilters by remember { mutableStateOf(false) }
     var selectedItem by remember { mutableStateOf<Item?>(null) }
 
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
+
+    val pullToRefreshState = rememberPullToRefreshState()
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            SearchBar(
-                searchQuery = searchQuery,
-                hasActiveFilters = hasActiveFilters,
-                onSearchChange = viewModel::updateSearchQuery,
-                onFilterClick = { showFilters = true },
-            )
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            state = pullToRefreshState,
+            onRefresh = { viewModel.refreshItems() },
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    state = pullToRefreshState,
+                    isRefreshing = isRefreshing,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                )
+            },
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                SearchBar(
+                    searchQuery = searchQuery,
+                    hasActiveFilters = hasActiveFilters,
+                    onSearchChange = viewModel::updateSearchQuery,
+                    onFilterClick = { showFilters = true },
+                )
 
-            when (uiState) {
-                is UiState.Loading -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                when (uiState) {
+                    is UiState.Loading -> {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
                     }
-                }
 
-                is UiState.Success -> {
-                    val items = (uiState as UiState.Success<List<Item>>).data
-                    if (items.isEmpty()) {
-                        EmptyState()
-                    } else {
-                        ItemGrid(
-                            items = items,
-                            viewModel = viewModel,
-                            onItemClick = { item ->
-                                selectedItem = item
-                                viewModel.loadSellerPhone(item.sellerId)
-                            },
-                        )
+                    is UiState.Success -> {
+                        val items = (uiState as UiState.Success<List<Item>>).data
+                        if (items.isEmpty()) {
+                            EmptyState()
+                        } else {
+                            ItemGrid(
+                                items = items,
+                                viewModel = viewModel,
+                                onItemClick = { item ->
+                                    selectedItem = item
+                                    viewModel.loadSellerPhone(item.sellerId)
+                                },
+                            )
+                        }
                     }
-                }
 
-                is UiState.Error -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = (uiState as UiState.Error).message,
-                            color = MaterialTheme.colorScheme.error,
-                        )
+                    is UiState.Error -> {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                text = (uiState as UiState.Error).message,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
                     }
-                }
 
-                UiState.Idle -> Unit
+                    UiState.Idle -> Unit
+                }
             }
         }
     }

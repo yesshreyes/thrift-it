@@ -11,10 +11,13 @@ import com.example.thriftit.domain.models.User
 import com.example.thriftit.domain.util.Result
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -28,6 +31,24 @@ class UserRepository
         private val userDao: UserDao,
     ) {
         private val usersCollection = firestore.collection("users")
+
+        fun observeUser(userId: String): Flow<User?> {
+            syncUserFromFirestore(userId)
+            return userDao.getUserById(userId).map { it?.toDomain() }
+        }
+
+        private fun syncUserFromFirestore(userId: String) {
+            firestore
+                .collection("users")
+                .document(userId)
+                .addSnapshotListener { snapshot, _ ->
+                    snapshot?.data?.toUser()?.let { user ->
+                        CoroutineScope(Dispatchers.IO).launch {
+                            userDao.insertUser(user.toEntity())
+                        }
+                    }
+                }
+        }
 
         // Get user by ID with real-time updates
         @OptIn(DelicateCoroutinesApi::class)

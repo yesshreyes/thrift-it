@@ -10,16 +10,35 @@ import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import com.cloudinary.android.MediaManager
+import com.example.thriftit.presentation.util.SyncManager
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 @HiltAndroidApp
 class ThriftItApplication :
     Application(),
     SingletonImageLoader.Factory {
+    @Inject
+    lateinit var syncManager: SyncManager
+
     override fun onCreate() {
         super.onCreate()
+        setupFirestore()
         initCloudinary()
         createNotificationChannel()
+        syncManager
+    }
+
+    private fun setupFirestore() {
+        val settings =
+            FirebaseFirestoreSettings
+                .Builder()
+                .setPersistenceEnabled(true)
+                .build()
+
+        FirebaseFirestore.getInstance().firestoreSettings = settings
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader =

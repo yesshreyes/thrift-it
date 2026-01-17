@@ -14,6 +14,9 @@ data class Item(
     val coordinates: Coordinates? = null,
     val isAvailable: Boolean = true,
     val distance: Double? = null,
+    val pendingUpload: Boolean = false,
+    val isSynced: Boolean = true,
+    val lastUpdated: Long = System.currentTimeMillis(),
 ) {
     val formattedPrice: String
         get() = "₹${String.format("%,.2f", price)}"

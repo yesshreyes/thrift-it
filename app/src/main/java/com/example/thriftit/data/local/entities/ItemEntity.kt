@@ -1,5 +1,6 @@
 package com.example.thriftit.data.local.entities
 
+import android.net.Uri
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -31,5 +32,11 @@ data class ItemEntity(
     @ColumnInfo(name = "is_available")
     val isAvailable: Boolean = true,
     @ColumnInfo(name = "is_synced")
-    val isSynced: Boolean = false,
+    val isSynced: Boolean = true,
+    @ColumnInfo(name = "pending_upload")
+    val pendingUpload: Boolean = false,
+    @ColumnInfo(name = "local_image_uris")
+    val localImageUris: List<Uri> = emptyList(),
+    @ColumnInfo(name = "last_updated")
+    val lastUpdated: Long = System.currentTimeMillis(),
 )

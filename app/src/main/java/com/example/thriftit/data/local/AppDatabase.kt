@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.thriftit.data.local.converters.UriListConverter
 import com.example.thriftit.data.local.dao.ItemDao
 import com.example.thriftit.data.local.dao.UserDao
 import com.example.thriftit.data.local.entities.ItemEntity
@@ -13,9 +15,10 @@ import com.example.thriftit.data.local.entities.UserEntity
 
 @Database(
     entities = [ItemEntity::class, UserEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
+@TypeConverters(UriListConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun itemDao(): ItemDao
 

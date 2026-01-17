@@ -1,6 +1,7 @@
 package com.example.thriftit.data.repository
 
 import android.app.Activity
+import com.example.thriftit.data.local.dao.ItemDao
 import com.example.thriftit.data.local.dao.UserDao
 import com.example.thriftit.data.mappers.toEntity
 import com.example.thriftit.data.mappers.toFirestoreMap
@@ -28,6 +29,7 @@ class AuthRepository
         private val auth: FirebaseAuth,
         private val firestore: FirebaseFirestore,
         private val userDao: UserDao,
+        private val itemDao: ItemDao,
     ) {
         private val usersCollection = firestore.collection("users")
 
@@ -195,6 +197,7 @@ class AuthRepository
             try {
                 auth.signOut()
                 userDao.deleteAllUsers()
+                itemDao.deleteAllItems()
                 Result.Success(Unit)
             } catch (e: Exception) {
                 Result.Error(e)

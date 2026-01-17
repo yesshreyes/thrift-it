@@ -11,6 +11,7 @@ import com.example.thriftit.domain.util.Result
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -216,87 +217,86 @@ class UploadRepository
             callbackFlow {
                 trySend(Result.Loading)
 
-                try {
-                    val downloadUrls = mutableListOf<String>()
-                    val totalImages = imageUris.size
-                    var completedUploads = 0
+                val downloadUrls = mutableListOf<String>()
+                val totalImages = imageUris.size
+                var completedUploads = 0
 
-                    imageUris.forEach { uri ->
-                        MediaManager
-                            .get()
-                            .upload(uri)
-                            .option("folder", "thrift-it/items")
-                            .option("resource_type", "image")
-                            .unsigned("thrift_it_unsigned") // Replace with your upload preset
-                            .callback(
-                                object : UploadCallback {
-                                    override fun onStart(requestId: String) {}
+                imageUris.forEach { uri ->
+                    MediaManager
+                        .get()
+                        .upload(uri)
+                        .option("folder", "thrift-it/items")
+                        .option("resource_type", "image")
+                        .unsigned("thrift_it_unsigned")
+                        .callback(
+                            object : UploadCallback {
+                                override fun onSuccess(
+                                    requestId: String,
+                                    resultData: Map<*, *>,
+                                ) {
+                                    val secureUrl =
+                                        resultData["secure_url"] as? String
+                                            ?: return sendError("Image upload failed")
 
-                                    override fun onProgress(
-                                        requestId: String,
-                                        bytes: Long,
-                                        totalBytes: Long,
-                                    ) {}
+                                    downloadUrls.add(secureUrl)
+                                    completedUploads++
 
-                                    override fun onSuccess(
-                                        requestId: String,
-                                        resultData: Map<*, *>,
-                                    ) {
-                                        val secureUrl = resultData["secure_url"] as? String
-                                        if (secureUrl != null) {
-                                            downloadUrls.add(secureUrl)
-                                            completedUploads++
+                                    if (completedUploads == totalImages) {
+                                        launch {
+                                            try {
+                                                val itemId = UUID.randomUUID().toString()
+                                                val itemWithImages =
+                                                    item.copy(
+                                                        id = itemId,
+                                                        imageUrls = downloadUrls,
+                                                    )
 
-                                            // Check if all images uploaded
-                                            if (completedUploads == totalImages) {
-                                                // Create item in Firestore
-                                                kotlinx.coroutines.GlobalScope.launch {
-                                                    try {
-                                                        val itemId = UUID.randomUUID().toString()
-                                                        val itemWithImages =
-                                                            item.copy(
-                                                                id = itemId,
-                                                                imageUrls = downloadUrls,
-                                                            )
+                                                itemsCollection
+                                                    .document(itemId)
+                                                    .set(itemWithImages.toFirestoreMap())
+                                                    .await()
 
-                                                        itemsCollection
-                                                            .document(itemId)
-                                                            .set(itemWithImages.toFirestoreMap())
-                                                            .await()
-
-                                                        trySend(Result.Success(itemId))
-                                                        close()
-                                                    } catch (e: Exception) {
-                                                        trySend(Result.Error(e))
-                                                        close()
-                                                    }
-                                                }
+                                                trySend(Result.Success(itemId))
+                                                close()
+                                            } catch (e: Exception) {
+                                                sendError(e.message ?: "Firestore upload failed")
                                             }
                                         }
                                     }
+                                }
 
-                                    override fun onError(
-                                        requestId: String,
-                                        error: ErrorInfo,
-                                    ) {
-                                        trySend(Result.Error(Exception(error.description)))
-                                        close()
-                                    }
+                                override fun onError(
+                                    requestId: String,
+                                    error: ErrorInfo,
+                                ) {
+                                    sendError(error.description)
+                                }
 
-                                    override fun onReschedule(
-                                        requestId: String,
-                                        error: ErrorInfo,
-                                    ) {}
-                                },
-                            ).dispatch()
-                    }
-                } catch (e: Exception) {
-                    trySend(Result.Error(e))
-                    close()
+                                override fun onReschedule(
+                                    requestId: String,
+                                    error: ErrorInfo,
+                                ) {
+                                    sendError(error.description)
+                                }
+
+                                override fun onStart(requestId: String) {}
+
+                                override fun onProgress(
+                                    requestId: String,
+                                    bytes: Long,
+                                    totalBytes: Long,
+                                ) {}
+                            },
+                        ).dispatch()
                 }
 
                 awaitClose { }
             }
+
+        private fun ProducerScope<Result<String>>.sendError(message: String) {
+            trySend(Result.Error(Exception(message)))
+            close()
+        }
 
         // Upload profile image to Cloudinary
         suspend fun uploadProfileImage(
