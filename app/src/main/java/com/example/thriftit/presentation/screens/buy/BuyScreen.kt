@@ -34,6 +34,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -49,13 +50,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -76,7 +75,6 @@ fun BuyScreen(viewModel: BuyViewModel = hiltViewModel()) {
     var selectedItem by remember { mutableStateOf<Item?>(null) }
 
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
-
     val pullToRefreshState = rememberPullToRefreshState()
 
     Surface(
@@ -106,7 +104,9 @@ fun BuyScreen(viewModel: BuyViewModel = hiltViewModel()) {
                 when (uiState) {
                     is UiState.Loading -> {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.primary,
+                            )
                         }
                     }
 
@@ -130,7 +130,8 @@ fun BuyScreen(viewModel: BuyViewModel = hiltViewModel()) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
                                 text = (uiState as UiState.Error).message,
-                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
                             )
                         }
                     }
@@ -140,8 +141,6 @@ fun BuyScreen(viewModel: BuyViewModel = hiltViewModel()) {
             }
         }
     }
-
-    // ---------------- FILTER BOTTOM SHEET ----------------
 
     if (showFilters) {
         FilterBottomSheet(
@@ -167,8 +166,6 @@ fun BuyScreen(viewModel: BuyViewModel = hiltViewModel()) {
         )
     }
 
-    // ---------------- ITEM DETAIL DIALOG ----------------
-
     val context = LocalContext.current
     val sellerPhone by viewModel.sellerPhone.collectAsState()
 
@@ -187,8 +184,6 @@ fun BuyScreen(viewModel: BuyViewModel = hiltViewModel()) {
         )
     }
 }
-
-// ---------------- SEARCH BAR ----------------
 
 @Composable
 private fun SearchBar(
@@ -209,12 +204,27 @@ private fun SearchBar(
             value = searchQuery,
             onValueChange = onSearchChange,
             modifier = Modifier.weight(1f),
-            placeholder = { Text("Search items…") },
+            placeholder = {
+                Text(
+                    text = "Search items…",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            },
             leadingIcon = {
-                Icon(Icons.Default.Search, contentDescription = "Search")
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
             },
             singleLine = true,
             shape = RoundedCornerShape(24.dp),
+            colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                ),
         )
 
         Box {
@@ -246,8 +256,6 @@ private fun SearchBar(
     }
 }
 
-// ---------------- GRID ----------------
-
 @Composable
 private fun ItemGrid(
     items: List<Item>,
@@ -272,8 +280,6 @@ private fun ItemGrid(
     }
 }
 
-// ---------------- ITEM CARD ----------------
-
 @Composable
 private fun ItemCard(
     item: Item,
@@ -284,8 +290,8 @@ private fun ItemCard(
             Modifier
                 .fillMaxWidth()
                 .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(2.dp),
-        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(3.dp),
+        shape = RoundedCornerShape(14.dp),
     ) {
         Column {
             val context = LocalContext.current
@@ -308,7 +314,8 @@ private fun ItemCard(
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(
                     text = item.title,
-                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -326,6 +333,7 @@ private fun ItemCard(
                 Text(
                     text = item.description,
                     style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -344,30 +352,28 @@ private fun ItemCard(
     }
 }
 
-// ---------------- TAG ----------------
-
 @Composable
 private fun ItemTag(text: String) {
     Surface(
         shape = RoundedCornerShape(6.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer,
+        color = MaterialTheme.colorScheme.surface,
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
         )
     }
 }
-
-// ---------------- EMPTY ----------------
 
 @Composable
 private fun EmptyState() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(
             text = "No items available",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -386,13 +392,9 @@ private fun openWhatsApp(
     try {
         context.startActivity(intent)
     } catch (e: ActivityNotFoundException) {
-        Toast
-            .makeText(context, "WhatsApp not installed", Toast.LENGTH_SHORT)
-            .show()
+        Toast.makeText(context, "WhatsApp not installed", Toast.LENGTH_SHORT).show()
     }
 }
-
-// ---------------- UTIL ----------------
 
 private fun Double.format(decimals: Int): String = "%.${decimals}f".format(this)
 
@@ -405,7 +407,7 @@ fun Item.toItemDetail() =
         itemAge = condition.displayName,
         distance = distance ?: 0.0,
         sellerName = sellerName ?: "Seller",
-        sellerPhone = "", // will be fetched next
+        sellerPhone = "",
     )
 
 @Preview(showBackground = true)

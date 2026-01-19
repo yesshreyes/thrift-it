@@ -2,6 +2,7 @@
 accompanistPermissions = "0.37.3"
 agp = "8.13.2"
 cloudinaryAndroid = "3.1.2"
+coreSplashscreen = "1.2.0"
 dagger = "2.57.2"
 firebaseBom = "34.7.0"
 firebaseBomVersion = "34.7.0"
@@ -31,6 +32,7 @@ foundation = "1.10.0"
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomKtx" }

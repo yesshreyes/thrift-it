@@ -1,12 +1,8 @@
 package com.example.thriftit.presentation.screens.sell
 
 import android.Manifest
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -63,8 +59,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -89,8 +83,6 @@ fun SellScreen(viewModel: SellViewModel = hiltViewModel()) {
     val selectedCondition by viewModel.condition.collectAsStateWithLifecycle()
     val validationErrors by viewModel.validationErrors.collectAsStateWithLifecycle()
 
-    // ---------------- CAMERA PERMISSION ----------------
-
     val cameraPermissionLauncher =
         rememberLauncherForActivityResult(
             ActivityResultContracts.RequestPermission(),
@@ -100,16 +92,12 @@ fun SellScreen(viewModel: SellViewModel = hiltViewModel()) {
             }
         }
 
-    // ---------------- GALLERY PICKER ----------------
-
     val galleryPicker =
         rememberLauncherForActivityResult(
             ActivityResultContracts.PickVisualMedia(),
         ) { uri ->
             uri?.let { viewModel.addImage(it) }
         }
-
-    // ---------------- CAMERA PICKER ----------------
 
     val cameraUri = remember { mutableStateOf<Uri?>(null) }
 
@@ -122,35 +110,12 @@ fun SellScreen(viewModel: SellViewModel = hiltViewModel()) {
             }
         }
 
-    val notificationPermissionLauncher =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestPermission(),
-        ) { granted ->
-            if (!granted) {
-                Toast
-                    .makeText(
-                        context,
-                        "Notifications disabled. You won't get upload alerts.",
-                        Toast.LENGTH_SHORT,
-                    ).show()
-            }
-        }
-
-    LaunchedEffect(Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            notificationPermissionLauncher.launch(
-                Manifest.permission.POST_NOTIFICATIONS,
-            )
-        }
-    }
-
     val uploadState by viewModel.uploadState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uploadState) {
         when (uploadState) {
             is UploadUiState.Success -> {
                 Toast.makeText(context, "Item uploaded successfully", Toast.LENGTH_SHORT).show()
-                showUploadSuccessNotification(context)
                 viewModel.resetForm()
             }
 
@@ -182,12 +147,11 @@ fun SellScreen(viewModel: SellViewModel = hiltViewModel()) {
 
             Spacer(Modifier.height(24.dp))
 
-            // ---------------- IMAGE PICKER ----------------
-
             Text(
                 text = "Item Photos",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground,
             )
 
             Spacer(Modifier.height(12.dp))
@@ -225,8 +189,6 @@ fun SellScreen(viewModel: SellViewModel = hiltViewModel()) {
 
             Spacer(Modifier.height(16.dp))
 
-            // ---------------- IMAGE PREVIEW ----------------
-
             if (selectedImages.isNotEmpty()) {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(selectedImages) { uri ->
@@ -250,12 +212,13 @@ fun SellScreen(viewModel: SellViewModel = hiltViewModel()) {
                             ) {
                                 Surface(
                                     shape = RoundedCornerShape(50),
-                                    color = MaterialTheme.colorScheme.errorContainer,
+                                    color = MaterialTheme.colorScheme.surface,
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Close,
                                         contentDescription = "Remove",
                                         modifier = Modifier.padding(4.dp),
+                                        tint = MaterialTheme.colorScheme.onSurface,
                                     )
                                 }
                             }
@@ -270,8 +233,8 @@ fun SellScreen(viewModel: SellViewModel = hiltViewModel()) {
                             .height(180.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .border(
-                                2.dp,
-                                MaterialTheme.colorScheme.outline,
+                                1.5.dp,
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                                 RoundedCornerShape(12.dp),
                             ).clickable {
                                 galleryPicker.launch(
@@ -285,16 +248,18 @@ fun SellScreen(viewModel: SellViewModel = hiltViewModel()) {
                             imageVector = Icons.Default.AddPhotoAlternate,
                             contentDescription = null,
                             modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                         Spacer(Modifier.height(8.dp))
-                        Text("Tap to add images")
+                        Text(
+                            text = "Tap to add images",
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
                     }
                 }
             }
 
             Spacer(Modifier.height(24.dp))
-
-            // ---------------- FORM ----------------
 
             SellForm(
                 itemName = itemName,
@@ -319,8 +284,6 @@ fun SellScreen(viewModel: SellViewModel = hiltViewModel()) {
 
             Spacer(Modifier.height(32.dp))
 
-            val uploadState by viewModel.uploadState.collectAsStateWithLifecycle()
-
             UploadButton(
                 isEnabled =
                     itemName.isNotBlank() &&
@@ -329,69 +292,13 @@ fun SellScreen(viewModel: SellViewModel = hiltViewModel()) {
                         selectedImages.isNotEmpty() &&
                         uploadState !is UploadUiState.Uploading,
                 isLoading = uploadState is UploadUiState.Uploading,
-                onClick = {
-                    viewModel.uploadItem()
-                },
+                onClick = viewModel::uploadItem,
             )
 
             Spacer(Modifier.height(16.dp))
 
             InfoNote()
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ItemConditionDropdown(
-    selectedCondition: ItemCondition?,
-    error: String?,
-    onSelect: (ItemCondition) -> Unit,
-) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-    ) {
-        OutlinedTextField(
-            value = selectedCondition?.displayName ?: "",
-            onValueChange = {},
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(),
-            readOnly = true,
-            isError = error != null,
-            label = { Text("Item Condition") },
-            placeholder = { Text("Select condition") },
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-            },
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            ItemCondition.entries.forEach { condition ->
-                DropdownMenuItem(
-                    text = { Text(condition.displayName) },
-                    onClick = {
-                        onSelect(condition)
-                        expanded = false
-                    },
-                )
-            }
-        }
-    }
-
-    if (error != null) {
-        Text(
-            text = error,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodySmall,
-        )
     }
 }
 
@@ -409,99 +316,8 @@ private fun SellHeader() {
     Text(
         text = "Add details about the item you want to sell",
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = MaterialTheme.colorScheme.onSurface,
     )
-}
-
-@Composable
-private fun ImagePickerSection(
-    selectedImageUri: Uri?,
-    onPickImage: () -> Unit,
-    onRemoveImage: () -> Unit,
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(
-            text = "Item Photo",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (selectedImageUri != null) {
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-            ) {
-                AsyncImage(
-                    model = selectedImageUri,
-                    contentDescription = "Selected item image",
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop,
-                )
-
-                IconButton(
-                    onClick = onRemoveImage,
-                    modifier =
-                        Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp),
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(50),
-                        color = MaterialTheme.colorScheme.errorContainer,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Remove image",
-                            tint = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.padding(8.dp),
-                        )
-                    }
-                }
-            }
-        } else {
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(
-                            width = 2.dp,
-                            color = MaterialTheme.colorScheme.outline,
-                            shape = RoundedCornerShape(12.dp),
-                        ).clickable(onClick = onPickImage),
-                contentAlignment = Alignment.Center,
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AddPhotoAlternate,
-                        contentDescription = "Add photo",
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Tap to add photo",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -523,7 +339,6 @@ private fun SellForm(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // Item Name
         OutlinedTextField(
             value = itemName,
             onValueChange = onItemNameChange,
@@ -534,11 +349,11 @@ private fun SellForm(
             colors =
                 OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    unfocusedBorderColor =
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                 ),
         )
 
-        // Price
         OutlinedTextField(
             value = price,
             onValueChange = onPriceChange,
@@ -550,11 +365,11 @@ private fun SellForm(
             colors =
                 OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    unfocusedBorderColor =
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                 ),
         )
 
-        // Description
         OutlinedTextField(
             value = description,
             onValueChange = onDescriptionChange,
@@ -566,12 +381,14 @@ private fun SellForm(
             colors =
                 OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    unfocusedBorderColor =
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                 ),
             supportingText = {
                 Text(
                     text = "${description.length}/$DESC_MAX_LENGTH",
                     style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
             },
         )
@@ -580,6 +397,66 @@ private fun SellForm(
             selectedCondition = selectedCondition,
             error = conditionError,
             onSelect = onConditionChange,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ItemConditionDropdown(
+    selectedCondition: ItemCondition?,
+    error: String?,
+    onSelect: (ItemCondition) -> Unit,
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+    ) {
+        OutlinedTextField(
+            value = selectedCondition?.displayName.orEmpty(),
+            onValueChange = {},
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+            readOnly = true,
+            isError = error != null,
+            label = { Text("Item Condition") },
+            placeholder = { Text("Select condition") },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor =
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                ),
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            ItemCondition.entries.forEach { condition ->
+                DropdownMenuItem(
+                    text = { Text(condition.displayName) },
+                    onClick = {
+                        onSelect(condition)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
+
+    if (error != null) {
+        Text(
+            text = error,
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.bodySmall,
         )
     }
 }
@@ -611,43 +488,10 @@ private fun UploadButton(
         } else {
             Text(
                 text = "Upload Item",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.labelLarge,
             )
         }
     }
-}
-
-private fun showUploadSuccessNotification(context: Context) {
-    val intent =
-        context.packageManager
-            .getLaunchIntentForPackage(context.packageName)
-            ?.apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            }
-
-    val pendingIntent =
-        PendingIntent.getActivity(
-            context,
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-
-    val notification =
-        NotificationCompat
-            .Builder(context, "upload_channel")
-            .setSmallIcon(android.R.drawable.stat_notify_more)
-            .setContentTitle("Item Uploaded 🎉")
-            .setContentText("Your item is now visible to nearby buyers")
-            .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .build()
-
-    NotificationManagerCompat
-        .from(context)
-        .notify(System.currentTimeMillis().toInt(), notification)
 }
 
 @Composable
@@ -655,7 +499,7 @@ private fun InfoNote() {
     Text(
         text = "Your item will be visible to buyers in your area once uploaded",
         style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
         textAlign = TextAlign.Center,
         modifier = Modifier.fillMaxWidth(),
     )

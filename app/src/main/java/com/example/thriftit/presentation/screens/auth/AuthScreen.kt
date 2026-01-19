@@ -29,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,28 +49,27 @@ fun AuthScreen(
     val authState by viewModel.authState.collectAsState()
     val phoneNumber by viewModel.phoneNumber.collectAsState()
     val otp by viewModel.otp.collectAsState()
-    val currentUser by viewModel.currentUser.collectAsState()
 
     val context = LocalContext.current
     val activity = context as? Activity
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Handle auth state changes
     LaunchedEffect(authState) {
         when (val state = authState) {
             is AuthUiState.Success -> {
                 snackbarHostState.showSnackbar("Login successful!")
-
                 if (state.user?.displayName.isNullOrBlank()) {
                     onNavigateToProfile()
                 } else {
                     onNavigateToHome()
                 }
             }
+
             is AuthUiState.Error -> {
                 snackbarHostState.showSnackbar(state.message)
                 viewModel.resetState()
             }
+
             else -> Unit
         }
     }
@@ -97,21 +95,29 @@ fun AuthScreen(
                     is AuthUiState.Idle, is AuthUiState.Error -> {
                         PhoneInputSection(
                             phoneNumber = phoneNumber,
-                            onPhoneChange = { viewModel.updatePhoneNumber(it.filter(Char::isDigit).take(PHONE_LENGTH)) },
+                            onPhoneChange = {
+                                viewModel.updatePhoneNumber(
+                                    it.filter(Char::isDigit).take(PHONE_LENGTH),
+                                )
+                            },
                             onSendOtp = {
                                 activity?.let { viewModel.sendOtp(it) }
                             },
                             isEnabled = phoneNumber.length == PHONE_LENGTH,
                         )
                     }
-                    is AuthUiState.Loading -> {
-                        LoadingState()
-                    }
+
+                    is AuthUiState.Loading -> LoadingState()
+
                     is AuthUiState.OtpSent -> {
                         OtpInputSection(
                             phoneNumber = phoneNumber,
                             otp = otp,
-                            onOtpChange = { viewModel.updateOtp(it.filter(Char::isDigit).take(OTP_LENGTH)) },
+                            onOtpChange = {
+                                viewModel.updateOtp(
+                                    it.filter(Char::isDigit).take(OTP_LENGTH),
+                                )
+                            },
                             onVerifyOtp = { viewModel.verifyOtp() },
                             onChangeNumber = {
                                 viewModel.resetState()
@@ -124,6 +130,7 @@ fun AuthScreen(
                             isEnabled = otp.length == OTP_LENGTH,
                         )
                     }
+
                     else -> Unit
                 }
 
@@ -144,28 +151,10 @@ fun AuthScreen(
 }
 
 @Composable
-private fun LoadingState() {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        CircularProgressIndicator(modifier = Modifier.size(48.dp))
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Please wait...",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-@Composable
 private fun AuthHeader() {
     Text(
         text = "THRIFT IT",
         style = MaterialTheme.typography.headlineLarge,
-        fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.primary,
     )
 
@@ -174,8 +163,29 @@ private fun AuthHeader() {
     Text(
         text = "Buy & Sell Near You",
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = MaterialTheme.colorScheme.onSurface,
     )
+}
+
+@Composable
+private fun LoadingState() {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(44.dp),
+            color = MaterialTheme.colorScheme.primary,
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Please wait…",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
 }
 
 @Composable
@@ -187,8 +197,8 @@ private fun PhoneInputSection(
 ) {
     Text(
         text = "Enter your phone number",
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.SemiBold,
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onBackground,
     )
 
     Spacer(modifier = Modifier.height(16.dp))
@@ -198,14 +208,15 @@ private fun PhoneInputSection(
         onValueChange = onPhoneChange,
         modifier = Modifier.fillMaxWidth(),
         label = { Text("Phone Number") },
-        prefix = { Text("+91 ") },
+        prefix = { Text("+91") },
         placeholder = { Text("9000000000") },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
         singleLine = true,
         colors =
             OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                cursorColor = MaterialTheme.colorScheme.primary,
             ),
     )
 
@@ -213,16 +224,15 @@ private fun PhoneInputSection(
 
     Button(
         onClick = onSendOtp,
+        enabled = isEnabled,
         modifier =
             Modifier
                 .fillMaxWidth()
                 .height(50.dp),
-        enabled = isEnabled,
     ) {
         Text(
             text = "Send OTP",
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Medium,
+            style = MaterialTheme.typography.labelLarge,
         )
     }
 }
@@ -239,16 +249,16 @@ private fun OtpInputSection(
 ) {
     Text(
         text = "Enter OTP",
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.SemiBold,
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onBackground,
     )
 
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(6.dp))
 
     Text(
         text = "Sent to +91 $phoneNumber",
         style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = MaterialTheme.colorScheme.onSurface,
     )
 
     Spacer(modifier = Modifier.height(16.dp))
@@ -264,7 +274,8 @@ private fun OtpInputSection(
         colors =
             OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                cursorColor = MaterialTheme.colorScheme.primary,
             ),
     )
 
@@ -272,44 +283,49 @@ private fun OtpInputSection(
 
     Button(
         onClick = onVerifyOtp,
+        enabled = isEnabled,
         modifier =
             Modifier
                 .fillMaxWidth()
                 .height(50.dp),
-        enabled = isEnabled,
     ) {
         Text(
             text = "Verify OTP",
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Medium,
+            style = MaterialTheme.typography.labelLarge,
         )
     }
 
-    Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(12.dp))
 
     TextButton(onClick = onChangeNumber) {
-        Text("Change Phone Number")
+        Text(
+            text = "Change phone number",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 
-    Spacer(modifier = Modifier.height(8.dp))
-
     TextButton(onClick = onResendOtp) {
-        Text("Resend OTP")
+        Text(
+            text = "Resend OTP",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 
 @Composable
 private fun FooterNote() {
     Text(
-        text = "We'll send you an OTP via SMS to verify your number",
+        text = "We’ll send you an OTP via SMS to verify your number",
         style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = MaterialTheme.colorScheme.onSurface,
         textAlign = TextAlign.Center,
         modifier = Modifier.padding(horizontal = 16.dp),
     )
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+@Preview
 @Composable
 private fun AuthScreenPreview() {
     MaterialTheme {

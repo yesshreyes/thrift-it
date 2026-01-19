@@ -50,24 +50,20 @@ enum class NotificationType {
 
 @Composable
 fun NotificationScreen() {
-    val notifications = getSampleNotifications() // TODO: Replace with ViewModel
-    val isLoading = false // TODO: Replace with ViewModel state
+    val notifications = getSampleNotifications()
+    val isLoading = false
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             NotificationHeader()
 
-            if (isLoading) {
-                LoadingState()
-            } else if (notifications.isEmpty()) {
-                EmptyState()
-            } else {
-                NotificationList(notifications = notifications)
+            when {
+                isLoading -> LoadingState()
+                notifications.isEmpty() -> EmptyState()
+                else -> NotificationList(notifications)
             }
         }
     }
@@ -84,8 +80,8 @@ private fun NotificationHeader() {
         Text(
             text = "Notifications",
             style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -93,7 +89,7 @@ private fun NotificationHeader() {
         Text(
             text = "Stay updated with your listings",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -111,7 +107,7 @@ private fun NotificationList(notifications: List<Notification>) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(notifications) { notification ->
-            NotificationCard(notification = notification)
+            NotificationCard(notification)
         }
     }
 }
@@ -120,7 +116,7 @@ private fun NotificationList(notifications: List<Notification>) {
 private fun NotificationCard(notification: Notification) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(2.dp),
         shape = RoundedCornerShape(12.dp),
         colors =
             CardDefaults.cardColors(
@@ -134,16 +130,11 @@ private fun NotificationCard(notification: Notification) {
                     .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // Notification Icon
+            // Icon
             Surface(
-                modifier = Modifier.size(48.dp),
+                modifier = Modifier.size(44.dp),
                 shape = CircleShape,
-                color =
-                    when (notification.type) {
-                        NotificationType.ITEM_UPLOADED -> MaterialTheme.colorScheme.primaryContainer
-                        NotificationType.NEW_ITEM_NEARBY -> MaterialTheme.colorScheme.tertiaryContainer
-                        NotificationType.GENERAL -> MaterialTheme.colorScheme.secondaryContainer
-                    },
+                color = MaterialTheme.colorScheme.surface,
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -153,30 +144,21 @@ private fun NotificationCard(notification: Notification) {
                         imageVector =
                             when (notification.type) {
                                 NotificationType.ITEM_UPLOADED -> Icons.Default.CheckCircle
-                                NotificationType.NEW_ITEM_NEARBY -> Icons.Default.Notifications
-                                NotificationType.GENERAL -> Icons.Default.Notifications
+                                else -> Icons.Default.Notifications
                             },
                         contentDescription = null,
-                        tint =
-                            when (notification.type) {
-                                NotificationType.ITEM_UPLOADED -> MaterialTheme.colorScheme.onPrimaryContainer
-                                NotificationType.NEW_ITEM_NEARBY -> MaterialTheme.colorScheme.onTertiaryContainer
-                                NotificationType.GENERAL -> MaterialTheme.colorScheme.onSecondaryContainer
-                            },
-                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
                     )
                 }
             }
 
-            // Notification Content
-            Column(
-                modifier = Modifier.weight(1f),
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = notification.title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -186,7 +168,7 @@ private fun NotificationCard(notification: Notification) {
                 Text(
                     text = notification.message,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -196,7 +178,7 @@ private fun NotificationCard(notification: Notification) {
                 Text(
                     text = notification.timestamp,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
             }
         }
@@ -223,14 +205,13 @@ private fun EmptyState() {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(32.dp),
         ) {
             Icon(
                 imageVector = Icons.Default.Notifications,
                 contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.size(72.dp),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -238,8 +219,7 @@ private fun EmptyState() {
             Text(
                 text = "No notifications yet",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -247,14 +227,13 @@ private fun EmptyState() {
             Text(
                 text = "We'll notify you when something important happens",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
             )
         }
     }
 }
 
-// Sample data for preview
 private fun getSampleNotifications(): List<Notification> =
     listOf(
         Notification(

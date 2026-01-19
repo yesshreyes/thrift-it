@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -69,7 +70,6 @@ fun SettingsScreen(
     var showSignOutDialog by rememberSaveable { mutableStateOf(false) }
     var showDeleteAccountDialog by rememberSaveable { mutableStateOf(false) }
 
-    // Handle sign out success
     LaunchedEffect(signOutState) {
         when (signOutState) {
             is UiState.Success -> {
@@ -77,15 +77,13 @@ fun SettingsScreen(
                 onNavigateToAuth()
             }
             is UiState.Error -> {
-                val error = (signOutState as UiState.Error).message
-                snackbarHostState.showSnackbar("Sign out failed: $error")
+                snackbarHostState.showSnackbar("Sign out failed")
                 viewModel.resetSignOutState()
             }
             else -> Unit
         }
     }
 
-    // Handle delete account success
     LaunchedEffect(deleteAccountState) {
         when (deleteAccountState) {
             is UiState.Success -> {
@@ -93,8 +91,7 @@ fun SettingsScreen(
                 onNavigateToAuth()
             }
             is UiState.Error -> {
-                val error = (deleteAccountState as UiState.Error).message
-                snackbarHostState.showSnackbar("Delete account failed: $error")
+                snackbarHostState.showSnackbar("Delete account failed")
                 viewModel.resetDeleteAccountState()
             }
             else -> Unit
@@ -111,6 +108,7 @@ fun SettingsScreen(
                     CircularProgressIndicator()
                 }
             }
+
             is UiState.Success -> {
                 SettingsContent(
                     user = state.data,
@@ -120,28 +118,21 @@ fun SettingsScreen(
                     onDeleteAccount = { showDeleteAccountDialog = true },
                 )
             }
+
             is UiState.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text(
-                            text = "Error loading settings",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Text(
-                            text = state.message,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
+                    Text(
+                        text = "Error loading settings",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
                 }
             }
+
             else -> Unit
         }
 
@@ -152,8 +143,11 @@ fun SettingsScreen(
     }
 
     if (showSignOutDialog) {
-        SignOutDialog(
+        ConfirmDialog(
+            title = "Sign Out",
+            message = "Are you sure you want to sign out?",
             isLoading = signOutState is UiState.Loading,
+            confirmText = "Sign Out",
             onConfirm = {
                 viewModel.signOut()
                 showSignOutDialog = false
@@ -163,8 +157,12 @@ fun SettingsScreen(
     }
 
     if (showDeleteAccountDialog) {
-        DeleteAccountDialog(
+        ConfirmDialog(
+            title = "Delete Account",
+            message = "This action cannot be undone. All your data will be permanently deleted.",
             isLoading = deleteAccountState is UiState.Loading,
+            confirmText = "Delete Forever",
+            isDestructive = true,
             onConfirm = {
                 viewModel.deleteAccount()
                 showDeleteAccountDialog = false
@@ -205,7 +203,7 @@ private fun SettingsContent(
             Text(
                 text = "Manage your account and preferences",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface,
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -221,7 +219,7 @@ private fun SettingsContent(
                         SettingsItem(
                             icon = Icons.Default.LocationOn,
                             title = "Update Location",
-                            subtitle = "Get your current location",
+                            subtitle = "Refresh your current location",
                             onClick = onUpdateLocation,
                         ),
                     ),
@@ -236,21 +234,21 @@ private fun SettingsContent(
                         SettingsItem(
                             icon = Icons.Default.ExitToApp,
                             title = "Sign Out",
-                            subtitle = "Log out from your account",
+                            subtitle = "Log out from this device",
                             onClick = onSignOut,
                             isDestructive = true,
                         ),
                         SettingsItem(
                             icon = Icons.Default.DeleteForever,
                             title = "Delete Account",
-                            subtitle = "Permanently delete your account",
+                            subtitle = "Permanently remove your account",
                             onClick = onDeleteAccount,
                             isDestructive = true,
                         ),
                     ),
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -262,11 +260,10 @@ private fun SettingsContent(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                 )
-                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Version 1.0.0",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
             }
         }
@@ -280,10 +277,10 @@ private fun ProfileCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(2.dp),
         colors =
             CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                containerColor = MaterialTheme.colorScheme.surface,
             ),
     ) {
         Row(
@@ -310,10 +307,8 @@ private fun ProfileCard(
                     )
                 } else {
                     Surface(
-                        modifier =
-                            Modifier
-                                .size(56.dp)
-                                .clip(CircleShape),
+                        modifier = Modifier.size(56.dp),
+                        shape = CircleShape,
                         color = MaterialTheme.colorScheme.primary,
                     ) {
                         Box(
@@ -335,22 +330,15 @@ private fun ProfileCard(
                         text = user?.displayName ?: "User",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
-                        text = user?.phoneNumber ?: "No phone",
+                        text = user?.phoneNumber ?: "",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
-                    user?.location?.let { location ->
-                        Text(
-                            text = location,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
-                        )
-                    }
                 }
             }
 
@@ -358,7 +346,7 @@ private fun ProfileCard(
                 Icon(
                     imageVector = Icons.Default.Edit,
                     contentDescription = "Edit Profile",
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -370,7 +358,7 @@ private fun SettingsSection(
     title: String,
     items: List<SettingsItem>,
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column {
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
@@ -380,14 +368,13 @@ private fun SettingsSection(
         )
 
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+            elevation = CardDefaults.cardElevation(1.dp),
             colors =
                 CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                 ),
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column {
                 items.forEachIndexed { index, item ->
                     Row(
                         modifier =
@@ -396,59 +383,47 @@ private fun SettingsSection(
                                 .clickable(onClick = item.onClick)
                                 .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Icon(
-                                imageVector = item.icon,
-                                contentDescription = item.title,
-                                tint =
-                                    if (item.isDestructive) {
-                                        MaterialTheme.colorScheme.error
-                                    } else {
-                                        MaterialTheme.colorScheme.primary
-                                    },
-                                modifier = Modifier.size(24.dp),
-                            )
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = null,
+                            tint =
+                                if (item.isDestructive) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.primary
+                                },
+                        )
 
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = item.title,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.Medium,
-                                    color =
-                                        if (item.isDestructive) {
-                                            MaterialTheme.colorScheme.error
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurface
-                                        },
-                                )
-                                Text(
-                                    text = item.subtitle,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
+                        Spacer(Modifier.width(16.dp))
+
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                text = item.title,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Text(
+                                text = item.subtitle,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
                         }
 
                         Icon(
                             imageVector = Icons.Default.ChevronRight,
-                            contentDescription = "Navigate",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                         )
                     }
 
                     if (index < items.size - 1) {
                         HorizontalDivider(
                             modifier = Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant,
+                            thickness = 0.6.dp,
                         )
                     }
                 }
@@ -466,104 +441,32 @@ data class SettingsItem(
 )
 
 @Composable
-private fun SignOutDialog(
+private fun ConfirmDialog(
+    title: String,
+    message: String,
+    confirmText: String,
     isLoading: Boolean,
+    isDestructive: Boolean = false,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = { if (!isLoading) onDismiss() },
-        icon = {
-            Icon(
-                imageVector = Icons.Default.ExitToApp,
-                contentDescription = "Sign Out",
-                tint = MaterialTheme.colorScheme.error,
-            )
-        },
-        title = {
-            Text(text = "Sign Out", fontWeight = FontWeight.Bold)
-        },
+        title = { Text(title, fontWeight = FontWeight.Bold) },
         text = {
             if (isLoading) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Signing out...")
-                }
+                CircularProgressIndicator()
             } else {
-                Text("Are you sure you want to sign out? You'll need to log in again to access your account.")
+                Text(message)
             }
         },
         confirmButton = {
             if (!isLoading) {
                 TextButton(onClick = onConfirm) {
                     Text(
-                        text = "Sign Out",
-                        color = MaterialTheme.colorScheme.error,
+                        text = confirmText,
                         fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
-        },
-        dismissButton = {
-            if (!isLoading) {
-                TextButton(onClick = onDismiss) {
-                    Text("Cancel")
-                }
-            }
-        },
-    )
-}
-
-@Composable
-private fun DeleteAccountDialog(
-    isLoading: Boolean,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = { if (!isLoading) onDismiss() },
-        icon = {
-            Icon(
-                imageVector = Icons.Default.DeleteForever,
-                contentDescription = "Delete Account",
-                tint = MaterialTheme.colorScheme.error,
-            )
-        },
-        title = {
-            Text(
-                text = "Delete Account",
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.error,
-            )
-        },
-        text = {
-            if (isLoading) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Deleting account...")
-                }
-            } else {
-                Text(
-                    text = "⚠️ This action cannot be undone!\n\nAll your data, including listings and profile information, will be permanently deleted.",
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-        },
-        confirmButton = {
-            if (!isLoading) {
-                TextButton(onClick = onConfirm) {
-                    Text(
-                        text = "Delete Forever",
-                        color = MaterialTheme.colorScheme.error,
-                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
             }

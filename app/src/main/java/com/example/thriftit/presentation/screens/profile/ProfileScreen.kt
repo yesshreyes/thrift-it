@@ -63,15 +63,12 @@ fun ProfileSetupScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // ViewModel states
     val displayName by viewModel.displayName.collectAsStateWithLifecycle()
     val location by viewModel.location.collectAsStateWithLifecycle()
-    val coordinates by viewModel.coordinates.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val profileState by viewModel.profileState.collectAsStateWithLifecycle()
     val validationErrors by viewModel.validationErrors.collectAsStateWithLifecycle()
 
-    // Location permission state
     val locationPermissionsState =
         rememberMultiplePermissionsState(
             permissions =
@@ -83,11 +80,10 @@ fun ProfileSetupScreen(
 
     var isLoadingLocation by remember { mutableStateOf(false) }
 
-    // Handle profile save success
     LaunchedEffect(profileState) {
         when (profileState) {
             is UiState.Success -> {
-                snackbarHostState.showSnackbar("Profile saved successfully!")
+                snackbarHostState.showSnackbar("Profile saved successfully")
                 viewModel.resetProfileState()
                 onNavigateToMain()
             }
@@ -97,7 +93,7 @@ fun ProfileSetupScreen(
                 )
                 viewModel.resetProfileState()
             }
-            else -> {}
+            else -> Unit
         }
     }
 
@@ -123,10 +119,10 @@ fun ProfileSetupScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Name Field
+                // Name
                 OutlinedTextField(
                     value = displayName,
-                    onValueChange = { viewModel.updateDisplayName(it) },
+                    onValueChange = viewModel::updateDisplayName,
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text("Full Name") },
                     placeholder = { Text("John Doe") },
@@ -134,21 +130,22 @@ fun ProfileSetupScreen(
                     isError = validationErrors.containsKey("displayName"),
                     supportingText = {
                         validationErrors["displayName"]?.let {
-                            Text(it, color = MaterialTheme.colorScheme.error)
+                            Text(it, color = MaterialTheme.colorScheme.primary)
                         }
                     },
                     colors =
                         OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            unfocusedBorderColor =
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                         ),
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Phone Number Field (Read-only)
+                // Phone (read only)
                 OutlinedTextField(
-                    value = currentUser?.phoneNumber ?: "",
+                    value = currentUser?.phoneNumber.orEmpty(),
                     onValueChange = {},
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text("Phone Number") },
@@ -156,33 +153,36 @@ fun ProfileSetupScreen(
                     enabled = false,
                     colors =
                         OutlinedTextFieldDefaults.colors(
-                            disabledBorderColor = MaterialTheme.colorScheme.outline,
+                            disabledBorderColor =
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
                             disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledLabelColor =
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         ),
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Location Field
+                // Location
                 OutlinedTextField(
                     value = location,
-                    onValueChange = { viewModel.updateLocation(it) },
+                    onValueChange = viewModel::updateLocation,
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Location/Address") },
+                    label = { Text("Location / Address") },
                     placeholder = { Text("City, State") },
                     minLines = 2,
                     maxLines = 3,
                     isError = validationErrors.containsKey("location"),
                     supportingText = {
                         validationErrors["location"]?.let {
-                            Text(it, color = MaterialTheme.colorScheme.error)
+                            Text(it, color = MaterialTheme.colorScheme.primary)
                         }
                     },
                     colors =
                         OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            unfocusedBorderColor =
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                         ),
                 )
 
@@ -195,22 +195,23 @@ fun ProfileSetupScreen(
                         when {
                             locationPermissionsState.allPermissionsGranted -> {
                                 scope.launch {
-                                    // ✅ scope.launch needed
                                     isLoadingLocation = true
-                                    val coords = LocationHelper.getCurrentLocation(context)
+                                    val coords =
+                                        LocationHelper.getCurrentLocation(context)
                                     coords?.let { (lat, lng) ->
                                         viewModel.updateLocationFromCoordinates(lat, lng)
-                                        snackbarHostState.showSnackbar("Location coordinates captured!")
-                                    } ?: run {
-                                        snackbarHostState.showSnackbar("Unable to get location. Try GPS ON + Google Maps first")
-                                    }
+                                        snackbarHostState.showSnackbar("Location captured")
+                                    } ?: snackbarHostState.showSnackbar(
+                                        "Unable to get location",
+                                    )
                                     isLoadingLocation = false
                                 }
                             }
                             locationPermissionsState.shouldShowRationale -> {
                                 scope.launch {
-                                    // ✅ scope.launch needed
-                                    snackbarHostState.showSnackbar("Location needed for nearby listings")
+                                    snackbarHostState.showSnackbar(
+                                        "Location helps show nearby listings",
+                                    )
                                 }
                             }
                             else -> {
@@ -221,20 +222,10 @@ fun ProfileSetupScreen(
                     onOpenSettings = { openAppSettings(context) },
                 )
 
-                validationErrors["coordinates"]?.let {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = it,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Save Button
                 Button(
-                    onClick = { viewModel.saveProfile() },
+                    onClick = viewModel::saveProfile,
                     modifier =
                         Modifier
                             .fillMaxWidth()
@@ -243,14 +234,13 @@ fun ProfileSetupScreen(
                 ) {
                     if (profileState is UiState.Loading) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(22.dp),
                             color = MaterialTheme.colorScheme.onPrimary,
                         )
                     } else {
                         Text(
                             text = "Save Profile",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
+                            style = MaterialTheme.typography.labelLarge,
                         )
                     }
                 }
@@ -271,11 +261,13 @@ private fun ProfileHeader() {
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.primary,
     )
+
     Spacer(modifier = Modifier.height(8.dp))
+
     Text(
         text = "Help buyers and sellers find you",
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = MaterialTheme.colorScheme.onSurface,
         textAlign = TextAlign.Center,
     )
 }
@@ -283,35 +275,22 @@ private fun ProfileHeader() {
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun LocationPermissionCard(
-    locationPermissionsState: MultiplePermissionsState, // ✅ Fixed param
+    locationPermissionsState: MultiplePermissionsState,
     isLoadingLocation: Boolean,
     onEnableLocation: () -> Unit,
-    onOpenSettings: () -> Unit, // ✅ Fixed param
+    onOpenSettings: () -> Unit,
     context: Context = LocalContext.current,
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
-
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = "Location Access",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
-        )
-
-        // Debug info
-        Text(
-            text =
-                buildString {
-                    append("Permissions: ${locationPermissionsState.allPermissionsGranted}")
-                    append(" | GPS OK: ${LocationHelper.hasLocationPermission(context)}")
-                },
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onBackground,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Main button
         OutlinedButton(
             onClick = onEnableLocation,
             modifier = Modifier.fillMaxWidth(),
@@ -326,21 +305,25 @@ private fun LocationPermissionCard(
             Text(
                 text =
                     when {
-                        isLoadingLocation -> "Getting Location..."
-                        locationPermissionsState.allPermissionsGranted -> "Get Current Location"
-                        else -> "Enable Location"
+                        isLoadingLocation -> "Getting location…"
+                        locationPermissionsState.allPermissionsGranted -> "Get current location"
+                        else -> "Enable location"
                     },
             )
         }
 
-        // Settings button (if permanently denied)
-        if (!locationPermissionsState.allPermissionsGranted && !locationPermissionsState.shouldShowRationale) {
+        if (!locationPermissionsState.allPermissionsGranted &&
+            !locationPermissionsState.shouldShowRationale
+        ) {
             Spacer(modifier = Modifier.height(8.dp))
             TextButton(
                 onClick = onOpenSettings,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Open App Settings", color = MaterialTheme.colorScheme.error)
+                Text(
+                    text = "Open App Settings",
+                    color = MaterialTheme.colorScheme.primary,
+                )
             }
         }
     }
@@ -351,7 +334,7 @@ private fun InfoNote() {
     Text(
         text = "Your information helps build trust in the community",
         style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
         textAlign = TextAlign.Center,
         modifier = Modifier.padding(horizontal = 16.dp),
     )

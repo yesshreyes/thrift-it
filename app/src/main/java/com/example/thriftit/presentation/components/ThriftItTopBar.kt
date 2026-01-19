@@ -5,14 +5,12 @@ import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import com.example.thriftit.core.network.NetworkObserverEntryPoint
@@ -34,12 +32,13 @@ fun ThriftItTopBar() {
     val networkStatus by networkObserver.networkStatus.collectAsState(
         initial = NetworkStatus.AVAILABLE,
     )
+
     TopAppBar(
         title = {
             Text(
                 text = "THRIFT IT",
-                fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
             )
         },
         actions = {
@@ -47,7 +46,7 @@ fun ThriftItTopBar() {
                 Icon(
                     imageVector = Icons.Default.CloudOff,
                     contentDescription = "Offline",
-                    tint = Color.Red,
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
             }
         },

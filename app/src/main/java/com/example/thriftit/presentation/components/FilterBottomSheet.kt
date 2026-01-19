@@ -24,7 +24,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
@@ -83,17 +82,16 @@ private fun FilterContent(
         Text(
             text = "Filters",
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Price Range Section
+        // Price Range
         Text(
             text = "Price Range",
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onBackground,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -102,7 +100,6 @@ private fun FilterContent(
             text = "₹${priceRange.start.roundToInt()} - ₹${priceRange.endInclusive.roundToInt()}",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Medium,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -124,22 +121,22 @@ private fun FilterContent(
             Text(
                 text = "₹0",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = "₹1,00,000",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Distance Section
+        // Distance
         Text(
             text = "Maximum Distance",
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onBackground,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -148,7 +145,6 @@ private fun FilterContent(
             text = "${maxDistance.roundToInt()} km away",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Medium,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -170,18 +166,18 @@ private fun FilterContent(
             Text(
                 text = "1 km",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = "50 km",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Action Buttons
+        // Actions
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -190,14 +186,20 @@ private fun FilterContent(
                 onClick = onClearAll,
                 modifier = Modifier.weight(1f),
             ) {
-                Text("Clear All")
+                Text(
+                    text = "Clear All",
+                    style = MaterialTheme.typography.labelLarge,
+                )
             }
 
             Button(
                 onClick = onApplyFilters,
                 modifier = Modifier.weight(1f),
             ) {
-                Text("Apply Filters")
+                Text(
+                    text = "Apply Filters",
+                    style = MaterialTheme.typography.labelLarge,
+                )
             }
         }
 

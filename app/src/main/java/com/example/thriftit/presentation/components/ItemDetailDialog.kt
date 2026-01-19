@@ -23,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -65,7 +64,7 @@ fun ItemDetailDialog(
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState()),
             ) {
-                // Close Button
+                // Close button
                 Row(
                     modifier =
                         Modifier
@@ -82,7 +81,7 @@ fun ItemDetailDialog(
                     }
                 }
 
-                // Item Image
+                // Image
                 AsyncImage(
                     model = item.imageUrls,
                     contentDescription = item.name,
@@ -97,18 +96,16 @@ fun ItemDetailDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Item Details
                 Column(
                     modifier =
                         Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 24.dp),
                 ) {
-                    // Item Name
+                    // Title
                     Text(
                         text = item.name,
                         style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
 
@@ -118,41 +115,42 @@ fun ItemDetailDialog(
                     Text(
                         text = "₹${item.price.toInt()}",
                         style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Description Section
+                    // Description header
                     Text(
                         text = "Description",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = MaterialTheme.colorScheme.onBackground,
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    // Description
                     Text(
                         text = item.description,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Item Details Grid
+                    // Details
                     DetailRow(label = "Condition", value = item.itemAge)
                     Spacer(modifier = Modifier.height(8.dp))
-                    DetailRow(label = "Distance", value = "${formatDistance(item.distance)} km away")
+                    DetailRow(
+                        label = "Distance",
+                        value = "${formatDistance(item.distance)} km away",
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     DetailRow(label = "Seller", value = item.sellerName)
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Connect Button
+                    // CTA
                     Button(
                         onClick = onConnect,
                         modifier =
@@ -160,12 +158,10 @@ fun ItemDetailDialog(
                                 .fillMaxWidth()
                                 .height(50.dp),
                         shape = RoundedCornerShape(12.dp),
-                        enabled = true,
                     ) {
                         Text(
                             text = "Connect with Seller",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
+                            style = MaterialTheme.typography.labelLarge,
                         )
                     }
 
@@ -189,12 +185,11 @@ private fun DetailRow(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
         )
     }
@@ -211,7 +206,7 @@ private fun ItemDetailDialogPreview() {
                 ItemDetail(
                     name = "iPhone 12",
                     price = 35000.0,
-                    description = "Excellent condition ",
+                    description = "Excellent condition",
                     imageUrls = "https://via.placeholder.com/300",
                     itemAge = "1 year old",
                     distance = 2.5,

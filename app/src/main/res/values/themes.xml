@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Thriftit" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Thriftit" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
+    <style name="Theme.ThriftIt.Splash" parent="Theme.SplashScreen">
+
+        <!-- Splash background -->
+        <item name="windowSplashScreenBackground">@color/black</item>
+
+        <!-- Splash icon (VECTOR ONLY) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+
+        <!-- Remove icon background unless needed -->
+        <!-- <item name="windowSplashScreenIconBackgroundColor">@color/black</item> -->
+
+        <!-- Theme after splash -->
+        <item name="postSplashScreenTheme">@style/Theme.Thriftit</item>
+
+    </style>
+
 </resources>
