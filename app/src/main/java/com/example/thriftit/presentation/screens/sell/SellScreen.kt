@@ -63,6 +63,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.example.thriftit.domain.models.ItemCategory
 import com.example.thriftit.domain.models.ItemCondition
 import com.example.thriftit.presentation.util.UploadUiState
 import com.example.thriftit.presentation.util.createImageUri
@@ -80,6 +81,7 @@ fun SellScreen(viewModel: SellViewModel = hiltViewModel()) {
     var itemName by rememberSaveable { mutableStateOf("") }
     var price by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
+    val selectedCategory by viewModel.category.collectAsStateWithLifecycle()
     val selectedCondition by viewModel.condition.collectAsStateWithLifecycle()
     val validationErrors by viewModel.validationErrors.collectAsStateWithLifecycle()
 
@@ -265,7 +267,9 @@ fun SellScreen(viewModel: SellViewModel = hiltViewModel()) {
                 itemName = itemName,
                 price = price,
                 description = description,
+                selectedCategory = selectedCategory,
                 selectedCondition = selectedCondition,
+                categoryError = validationErrors["category"],
                 conditionError = validationErrors["condition"],
                 onItemNameChange = {
                     itemName = it.take(NAME_MAX_LENGTH)
@@ -279,6 +283,7 @@ fun SellScreen(viewModel: SellViewModel = hiltViewModel()) {
                     description = it.take(DESC_MAX_LENGTH)
                     viewModel.updateDescription(description)
                 },
+                onCategoryChange = viewModel::updateCategory,
                 onConditionChange = viewModel::updateCondition,
             )
 
@@ -326,15 +331,16 @@ private fun SellForm(
     itemName: String,
     price: String,
     description: String,
+    selectedCategory: ItemCategory?,
     selectedCondition: ItemCondition?,
+    categoryError: String?,
     conditionError: String?,
     onItemNameChange: (String) -> Unit,
     onPriceChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
+    onCategoryChange: (ItemCategory) -> Unit,
     onConditionChange: (ItemCondition) -> Unit,
 ) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -393,10 +399,76 @@ private fun SellForm(
             },
         )
 
+        ItemCategoryDropdown(
+            selectedCategory = selectedCategory,
+            error = categoryError,
+            onSelect = onCategoryChange,
+        )
+
         ItemConditionDropdown(
             selectedCondition = selectedCondition,
             error = conditionError,
             onSelect = onConditionChange,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ItemCategoryDropdown(
+    selectedCategory: ItemCategory?,
+    error: String?,
+    onSelect: (ItemCategory) -> Unit,
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+    ) {
+        OutlinedTextField(
+            value = selectedCategory?.displayName.orEmpty(),
+            onValueChange = {},
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+            readOnly = true,
+            isError = error != null,
+            label = { Text("Category") },
+            placeholder = { Text("Select category") },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor =
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                ),
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            ItemCategory.entries.forEach { category ->
+                DropdownMenuItem(
+                    text = { Text(category.displayName) },
+                    onClick = {
+                        onSelect(category)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
+
+    if (error != null) {
+        Text(
+            text = error,
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.bodySmall,
         )
     }
 }

@@ -17,16 +17,13 @@ sealed class UiState<out T> {
         val throwable: Throwable? = null,
     ) : UiState<Nothing>()
 
-    // Convenience properties
     val isIdle: Boolean get() = this is Idle
     val isLoading: Boolean get() = this is Loading
     val isSuccess: Boolean get() = this is Success
     val isError: Boolean get() = this is Error
 
-    // Get data safely
     fun getDataOrNull(): T? = (this as? Success)?.data
 
-    // Transform success data
     inline fun <R> map(transform: (T) -> R): UiState<R> =
         when (this) {
             is Success -> Success(transform(data))

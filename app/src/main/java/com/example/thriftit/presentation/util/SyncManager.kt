@@ -48,7 +48,6 @@ class SyncManager
 
             pendingItems.forEach { entity ->
                 try {
-                    // Convert stored paths back to URIs
                     val imagePaths = converters.toStringList(entity.localImagePaths)
                     Log.d("SYNC", "Syncing item ${entity.id} with ${imagePaths.size} images")
 
@@ -61,7 +60,6 @@ class SyncManager
 
                     if (imageUris.size != imagePaths.size) {
                         Log.e("SYNC", "Some images missing for item ${entity.id}: expected ${imagePaths.size}, found ${imageUris.size}")
-                        // Continue anyway with available images
                     }
 
                     uploadRepository
@@ -72,16 +70,13 @@ class SyncManager
                             when (result) {
                                 is com.example.thriftit.domain.util.Result.Success -> {
                                     Log.d("SYNC", "Successfully synced item ${entity.id}, deleting local copy")
-                                    // Delete the local item since it's now in Firebase
                                     itemDao.deleteItemById(entity.id)
-                                    // Clean up local images after successful sync
                                     imageStorageHelper.deleteImages(imagePaths)
                                     Log.d("SYNC", "Local item and images deleted")
                                 }
 
                                 is com.example.thriftit.domain.util.Result.Error -> {
                                     Log.e("SYNC", "Failed to sync item ${entity.id}: ${result.message}")
-                                    // Don't delete images, keep for retry
                                 }
 
                                 else -> Unit

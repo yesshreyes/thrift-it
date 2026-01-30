@@ -34,6 +34,7 @@ data class ItemDetail(
     val price: Double,
     val description: String,
     val imageUrls: String,
+    val category: String,
     val itemAge: String,
     val distance: Double,
     val sellerName: String,
@@ -132,6 +133,8 @@ fun ItemDetailDialog(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    DetailRow(label = "Category", value = item.category)
+                    Spacer(modifier = Modifier.height(8.dp))
                     DetailRow(label = "Condition", value = item.itemAge)
                     Spacer(modifier = Modifier.height(8.dp))
                     DetailRow(
@@ -200,6 +203,7 @@ private fun ItemDetailDialogPreview() {
                     price = 35000.0,
                     description = "Excellent condition",
                     imageUrls = "https://via.placeholder.com/300",
+                    category = "Electronics",
                     itemAge = "1 year old",
                     distance = 2.5,
                     sellerName = "John Doe",
