@@ -285,6 +285,10 @@ class SellViewModel
                 errors["condition"] = "Please select item condition"
             }
 
+            if (_category.value == null) {
+                errors["category"] = "Please select a category"
+            }
+
             if (_selectedImages.value.isEmpty()) {
                 errors["images"] = "At least one image is required"
             }

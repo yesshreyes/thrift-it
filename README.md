@@ -63,7 +63,7 @@ Built with **Kotlin + Jetpack Compose**, designed around an **offline-first arch
 - [x] Upload success notification
 - [ ] Clear form after upload
 - [ ] Auto-navigate to Buy screen after upload
-- [ ] Item category selection
+- [x] Item category selection
 
 #### Offline-First
 - [x] Room as single source of truth
@@ -71,8 +71,7 @@ Built with **Kotlin + Jetpack Compose**, designed around an **offline-first arch
 - [x] Background sync with Firestore
 - [x] Network connectivity monitoring
 - [x] Offline upload queue
-- [ ] Pending upload indicator in UI
-- [ ] Reliable re-sync when network restores
+- [x] Reliable re-sync when network restores
 
 #### UI & UX
 - [x] Compose-based UI for all screens

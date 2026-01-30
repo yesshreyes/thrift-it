@@ -11,6 +11,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -280,6 +282,7 @@ private fun ItemGrid(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ItemCard(
     item: Item,
@@ -340,10 +343,12 @@ private fun ItemCard(
 
                 Spacer(Modifier.height(8.dp))
 
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
+                    ItemTag(item.category.displayName)
                     ItemTag(item.condition.displayName)
                     ItemTag(item.distance?.let { "${it.format(1)} km" } ?: "Nearby")
                 }
@@ -404,6 +409,7 @@ fun Item.toItemDetail() =
         price = price,
         description = description,
         imageUrls = imageUrls.firstOrNull().orEmpty(),
+        category = category.displayName,
         itemAge = condition.displayName,
         distance = distance ?: 0.0,
         sellerName = sellerName ?: "Seller",

@@ -20,20 +20,17 @@ import kotlin.collections.firstOrNull
 object LocationHelper {
     @SuppressLint("MissingPermission")
     suspend fun getCurrentLocation(context: Context): Pair<Double, Double>? {
-        // Double-check permissions first
         if (!hasLocationPermission(context)) return null
 
         return withContext(Dispatchers.IO) {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
             try {
-                // Try 1: Get LAST LOCATION first (fastest)
                 val lastLocation = fusedLocationClient.lastLocation.await()
                 if (lastLocation != null) {
                     return@withContext Pair(lastLocation.latitude, lastLocation.longitude)
                 }
 
-                // Try 2: Get CURRENT LOCATION with higher priority
                 val location =
                     fusedLocationClient
                         .getCurrentLocation(
@@ -44,7 +41,6 @@ object LocationHelper {
                 if (location != null) {
                     Pair(location.latitude, location.longitude)
                 } else {
-                    // Try 3: Fallback to balanced accuracy
                     fusedLocationClient
                         .getCurrentLocation(
                             Priority.PRIORITY_BALANCED_POWER_ACCURACY,
@@ -55,7 +51,6 @@ object LocationHelper {
                         }
                 }
             } catch (e: Exception) {
-                // Log specific error
                 android.util.Log.e("LocationHelper", "Location error: ${e.message}")
                 null
             }
@@ -73,12 +68,10 @@ object LocationHelper {
 
                 val addresses =
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        // Android 13+ - callback version
                         val resultList = mutableListOf<Address>()
                         geocoder.getFromLocation(latitude, longitude, 1) { resultList.addAll(it) }
                         resultList
                     } else {
-                        // Below Android 13
                         @Suppress("DEPRECATION")
                         geocoder.getFromLocation(latitude, longitude, 1)?.toList() ?: emptyList()
                     }
