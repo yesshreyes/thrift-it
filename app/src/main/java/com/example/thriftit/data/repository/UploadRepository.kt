@@ -33,15 +33,12 @@ class UploadRepository
         private val itemsCollection = firestore.collection("items")
 
         init {
-            // Initialize Cloudinary MediaManager if not already initialized
             try {
                 MediaManager.get()
             } catch (e: Exception) {
-                // MediaManager not initialized, will be initialized in Application class
             }
         }
 
-        // Upload single image to Cloudinary
         suspend fun uploadImage(
             uri: Uri,
             folder: String = "thrift-it/items",
@@ -54,11 +51,10 @@ class UploadRepository
                             .upload(uri)
                             .option("folder", folder)
                             .option("resource_type", "image")
-                            .unsigned("thrift_it_unsigned") // Replace with your upload preset
+                            .unsigned("thrift_it_unsigned")
                             .callback(
                                 object : UploadCallback {
                                     override fun onStart(requestId: String) {
-                                        // Upload started
                                     }
 
                                     override fun onProgress(

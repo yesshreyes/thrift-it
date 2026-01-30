@@ -44,7 +44,6 @@ class NetworkObserverImpl
                         }
                     }
 
-                // 🔥 EMIT CURRENT STATE FIRST
                 val activeNetwork = connectivityManager.activeNetwork
                 val caps = connectivityManager.getNetworkCapabilities(activeNetwork)
 

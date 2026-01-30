@@ -2,7 +2,6 @@ package com.example.thriftit.navigation
 
 import kotlinx.serialization.Serializable
 
-// Type-safe routes using Navigation 3
 @Serializable
 object AuthRoute
 

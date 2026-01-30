@@ -78,7 +78,6 @@ private fun FilterContent(
                 .fillMaxWidth()
                 .padding(24.dp),
     ) {
-        // Header
         Text(
             text = "Filters",
             style = MaterialTheme.typography.headlineSmall,
@@ -87,7 +86,6 @@ private fun FilterContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Price Range
         Text(
             text = "Price Range",
             style = MaterialTheme.typography.titleMedium,
@@ -132,7 +130,6 @@ private fun FilterContent(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Distance
         Text(
             text = "Maximum Distance",
             style = MaterialTheme.typography.titleMedium,
@@ -177,7 +174,6 @@ private fun FilterContent(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Actions
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),

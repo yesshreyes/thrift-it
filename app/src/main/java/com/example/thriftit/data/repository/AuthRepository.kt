@@ -85,7 +85,7 @@ class AuthRepository
         suspend fun verifyOtpAndSignIn(
             verificationId: String,
             otp: String,
-        ): Result<String> { // Return verificationId, NOT User
+        ): Result<String> {
             return try {
                 val credential = PhoneAuthProvider.getCredential(verificationId, otp)
                 val authResult = auth.signInWithCredential(credential).await()
@@ -101,10 +101,8 @@ class AuthRepository
                         lastUpdated = System.currentTimeMillis(),
                     )
 
-                // Save locally so Profile screen can read it
                 userDao.insertUser(user.toEntity())
-                // ✅ DON'T create minimal user - just sign in
-                Result.Success(firebaseUser.uid) // Return UID only
+                Result.Success(firebaseUser.uid)
             } catch (e: Exception) {
                 Result.Error(e)
             }

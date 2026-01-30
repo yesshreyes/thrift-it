@@ -64,7 +64,6 @@ fun ItemDetailDialog(
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState()),
             ) {
-                // Close button
                 Row(
                     modifier =
                         Modifier
@@ -81,7 +80,6 @@ fun ItemDetailDialog(
                     }
                 }
 
-                // Image
                 AsyncImage(
                     model = item.imageUrls,
                     contentDescription = item.name,
@@ -102,7 +100,6 @@ fun ItemDetailDialog(
                             .fillMaxWidth()
                             .padding(horizontal = 24.dp),
                 ) {
-                    // Title
                     Text(
                         text = item.name,
                         style = MaterialTheme.typography.headlineSmall,
@@ -111,7 +108,6 @@ fun ItemDetailDialog(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Price
                     Text(
                         text = "₹${item.price.toInt()}",
                         style = MaterialTheme.typography.headlineMedium,
@@ -120,7 +116,6 @@ fun ItemDetailDialog(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Description header
                     Text(
                         text = "Description",
                         style = MaterialTheme.typography.titleMedium,
@@ -129,7 +124,6 @@ fun ItemDetailDialog(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Description
                     Text(
                         text = item.description,
                         style = MaterialTheme.typography.bodyMedium,
@@ -138,7 +132,6 @@ fun ItemDetailDialog(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Details
                     DetailRow(label = "Condition", value = item.itemAge)
                     Spacer(modifier = Modifier.height(8.dp))
                     DetailRow(
@@ -150,7 +143,6 @@ fun ItemDetailDialog(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // CTA
                     Button(
                         onClick = onConnect,
                         modifier =

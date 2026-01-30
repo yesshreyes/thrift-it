@@ -38,21 +38,11 @@ abstract class AppDatabase : RoomDatabase() {
                             context.applicationContext,
                             AppDatabase::class.java,
                             DATABASE,
-                        ).fallbackToDestructiveMigration() // Remove in production
-                        // .addMigrations(MIGRATION_1_2) // Add migrations as needed
+                        ).fallbackToDestructiveMigration()
                         .build()
 
                 INSTANCE = instance
                 instance
-            }
-
-        // Example migration for future use
-        private val MIGRATION_1_2 =
-            object : Migration(1, 2) {
-                override fun migrate(database: SupportSQLiteDatabase) {
-                    // Example: Adding a new column
-                    // database.execSQL("ALTER TABLE items ADD COLUMN views INTEGER NOT NULL DEFAULT 0")
-                }
             }
     }
 }

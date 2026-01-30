@@ -48,7 +48,6 @@ class ThriftItApplication :
                 add(OkHttpNetworkFetcherFactory())
             }.build()
 
-    // ---------------- NOTIFICATION CHANNEL ----------------
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -67,8 +66,6 @@ class ThriftItApplication :
         }
     }
 
-    // ---------------- CLOUDINARY INIT ----------------
-
     private fun initCloudinary() {
         val config =
             hashMapOf(
@@ -81,7 +78,6 @@ class ThriftItApplication :
         try {
             MediaManager.init(this, config)
         } catch (e: IllegalStateException) {
-            // MediaManager already initialized
         }
     }
 }

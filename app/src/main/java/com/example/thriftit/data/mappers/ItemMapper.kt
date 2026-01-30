@@ -7,7 +7,6 @@ import com.example.thriftit.domain.models.Item
 import com.example.thriftit.domain.models.ItemCategory
 import com.example.thriftit.domain.models.ItemCondition
 
-// Entity to Domain
 fun ItemEntity.toDomain(): Item =
     Item(
         id = this.id,
@@ -31,7 +30,6 @@ fun ItemEntity.toDomain(): Item =
         lastUpdated = lastUpdated,
     )
 
-// Domain to Entity
 fun Item.toEntity(
     pendingUpload: Boolean = false,
     isSynced: Boolean = true,
@@ -56,12 +54,10 @@ fun Item.toEntity(
         lastUpdated = lastUpdated,
     )
 
-// List extensions
 fun List<ItemEntity>.toDomainList(): List<Item> = map { it.toDomain() }
 
 fun List<Item>.toEntityList(): List<ItemEntity> = map { it.toEntity() }
 
-// Firestore Document to Domain
 fun Map<String, Any?>.toItem(documentId: String): Item? {
     return try {
         val imageUrls =
@@ -97,7 +93,6 @@ fun Map<String, Any?>.toItem(documentId: String): Item? {
     }
 }
 
-// Domain to Firestore Map
 fun Item.toFirestoreMap(): Map<String, Any?> =
     mapOf(
         "title" to title,

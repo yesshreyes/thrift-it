@@ -4,7 +4,6 @@ import com.example.thriftit.data.local.entities.UserEntity
 import com.example.thriftit.domain.models.Coordinates
 import com.example.thriftit.domain.models.User
 
-// Entity to Domain
 fun UserEntity.toDomain(): User =
     User(
         uid = this.uid,
@@ -21,7 +20,6 @@ fun UserEntity.toDomain(): User =
         lastUpdated = this.lastUpdated,
     )
 
-// Domain to Entity
 fun User.toEntity(): UserEntity =
     UserEntity(
         uid = this.uid,
@@ -35,7 +33,6 @@ fun User.toEntity(): UserEntity =
         isSynced = false,
     )
 
-// Firestore Document to Domain
 fun Map<String, Any?>.toUser(): User? {
     return try {
         User(
@@ -60,7 +57,6 @@ fun Map<String, Any?>.toUser(): User? {
     }
 }
 
-// Domain to Firestore Map
 fun User.toFirestoreMap(): Map<String, Any?> =
     mapOf(
         "uid" to uid,

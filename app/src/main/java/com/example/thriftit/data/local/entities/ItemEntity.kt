@@ -20,7 +20,7 @@ data class ItemEntity(
     @ColumnInfo(name = "condition")
     val condition: String,
     @ColumnInfo(name = "image_urls")
-    val imageUrls: String, // Store as comma-separated string
+    val imageUrls: String,
     @ColumnInfo(name = "seller_id")
     val sellerId: String,
     @ColumnInfo(name = "location")

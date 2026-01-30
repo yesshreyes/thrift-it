@@ -55,7 +55,6 @@ fun ThriftItNavGraph(
             )
         }
 
-        // Profile Setup Screen
         composable<ProfileSetupRoute> {
             ProfileSetupScreen(
                 onNavigateToMain = {
@@ -67,7 +66,6 @@ fun ThriftItNavGraph(
             )
         }
 
-        // Main Screen with Bottom Navigation
         composable<MainRoute> {
             MainScreen()
         }
