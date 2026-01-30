@@ -211,82 +211,143 @@ class UploadRepository
             imageUris: List<Uri>,
         ): Flow<Result<String>> =
             callbackFlow {
+                android.util.Log.d("UPLOAD_REPO", "uploadItemWithImages called with ${imageUris.size} images")
+
+                if (imageUris.isEmpty()) {
+                    android.util.Log.e("UPLOAD_REPO", "No images provided!")
+                    trySend(Result.Error(Exception("No images to upload")))
+                    close()
+                    return@callbackFlow
+                }
+
                 trySend(Result.Loading)
+
+                try {
+                    // Verify MediaManager is initialized
+                    MediaManager.get()
+                    android.util.Log.d("UPLOAD_REPO", "MediaManager initialized successfully")
+                } catch (e: Exception) {
+                    android.util.Log.e("UPLOAD_REPO", "MediaManager not initialized: ${e.message}", e)
+                    trySend(Result.Error(Exception("Cloudinary not initialized: ${e.message}")))
+                    close()
+                    return@callbackFlow
+                }
 
                 val downloadUrls = mutableListOf<String>()
                 val totalImages = imageUris.size
                 var completedUploads = 0
+                var hasError = false
 
-                imageUris.forEach { uri ->
-                    MediaManager
-                        .get()
-                        .upload(uri)
-                        .option("folder", "thrift-it/items")
-                        .option("resource_type", "image")
-                        .unsigned("thrift_it_unsigned")
-                        .callback(
-                            object : UploadCallback {
-                                override fun onSuccess(
-                                    requestId: String,
-                                    resultData: Map<*, *>,
-                                ) {
-                                    val secureUrl =
-                                        resultData["secure_url"] as? String
-                                            ?: return sendError("Image upload failed")
+                imageUris.forEachIndexed { index, uri ->
+                    if (hasError) return@forEachIndexed
 
-                                    downloadUrls.add(secureUrl)
-                                    completedUploads++
+                    android.util.Log.d("UPLOAD_REPO", "Starting upload for image ${index + 1}/$totalImages: $uri")
 
-                                    if (completedUploads == totalImages) {
-                                        launch {
-                                            try {
-                                                val itemId = UUID.randomUUID().toString()
-                                                val itemWithImages =
-                                                    item.copy(
-                                                        id = itemId,
-                                                        imageUrls = downloadUrls,
-                                                    )
+                    try {
+                        MediaManager
+                            .get()
+                            .upload(uri)
+                            .option("folder", "thrift-it/items")
+                            .option("resource_type", "image")
+                            .unsigned("thrift_it_unsigned")
+                            .callback(
+                                object : UploadCallback {
+                                    override fun onSuccess(
+                                        requestId: String,
+                                        resultData: Map<*, *>,
+                                    ) {
+                                        android.util.Log.d("UPLOAD_REPO", "Image ${index + 1} uploaded successfully")
+                                        val secureUrl = resultData["secure_url"] as? String
 
-                                                itemsCollection
-                                                    .document(itemId)
-                                                    .set(itemWithImages.toFirestoreMap())
-                                                    .await()
+                                        if (secureUrl == null) {
+                                            android.util.Log.e("UPLOAD_REPO", "No secure_url in response: $resultData")
+                                            if (!hasError) {
+                                                hasError = true
+                                                sendError("Image upload failed - no URL returned")
+                                            }
+                                            return
+                                        }
 
-                                                trySend(Result.Success(itemId))
-                                                close()
-                                            } catch (e: Exception) {
-                                                sendError(e.message ?: "Firestore upload failed")
+                                        downloadUrls.add(secureUrl)
+                                        completedUploads++
+                                        android.util.Log.d("UPLOAD_REPO", "Progress: $completedUploads/$totalImages images uploaded")
+
+                                        if (completedUploads == totalImages) {
+                                            android.util.Log.d("UPLOAD_REPO", "All images uploaded, creating Firestore document")
+                                            launch {
+                                                try {
+                                                    val itemId = UUID.randomUUID().toString()
+                                                    val itemWithImages =
+                                                        item.copy(
+                                                            id = itemId,
+                                                            imageUrls = downloadUrls,
+                                                        )
+
+                                                    android.util.Log.d("UPLOAD_REPO", "Saving to Firestore with ID: $itemId")
+                                                    itemsCollection
+                                                        .document(itemId)
+                                                        .set(itemWithImages.toFirestoreMap())
+                                                        .await()
+
+                                                    android.util.Log.d("UPLOAD_REPO", "Firestore save successful!")
+                                                    trySend(Result.Success(itemId))
+                                                    close()
+                                                } catch (e: Exception) {
+                                                    android.util.Log.e("UPLOAD_REPO", "Firestore save failed: ${e.message}", e)
+                                                    sendError(e.message ?: "Firestore upload failed")
+                                                }
                                             }
                                         }
                                     }
-                                }
 
-                                override fun onError(
-                                    requestId: String,
-                                    error: ErrorInfo,
-                                ) {
-                                    sendError(error.description)
-                                }
+                                    override fun onError(
+                                        requestId: String,
+                                        error: ErrorInfo,
+                                    ) {
+                                        android.util.Log.e("UPLOAD_REPO", "Upload error for image ${index + 1}: ${error.description}")
+                                        if (!hasError) {
+                                            hasError = true
+                                            sendError("Image upload failed: ${error.description}")
+                                        }
+                                    }
 
-                                override fun onReschedule(
-                                    requestId: String,
-                                    error: ErrorInfo,
-                                ) {
-                                    sendError(error.description)
-                                }
+                                    override fun onReschedule(
+                                        requestId: String,
+                                        error: ErrorInfo,
+                                    ) {
+                                        android.util.Log.w("UPLOAD_REPO", "Upload rescheduled for image ${index + 1}: ${error.description}")
+                                        if (!hasError) {
+                                            hasError = true
+                                            sendError("Upload rescheduled: ${error.description}")
+                                        }
+                                    }
 
-                                override fun onStart(requestId: String) {}
+                                    override fun onStart(requestId: String) {
+                                        android.util.Log.d("UPLOAD_REPO", "Upload started for image ${index + 1}, requestId: $requestId")
+                                    }
 
-                                override fun onProgress(
-                                    requestId: String,
-                                    bytes: Long,
-                                    totalBytes: Long,
-                                ) {}
-                            },
-                        ).dispatch()
+                                    override fun onProgress(
+                                        requestId: String,
+                                        bytes: Long,
+                                        totalBytes: Long,
+                                    ) {
+                                        val progress = (bytes.toFloat() / totalBytes.toFloat() * 100).toInt()
+                                        android.util.Log.d("UPLOAD_REPO", "Image ${index + 1} progress: $progress%")
+                                    }
+                                },
+                            ).dispatch()
+                    } catch (e: Exception) {
+                        android.util.Log.e("UPLOAD_REPO", "Exception dispatching upload for image ${index + 1}: ${e.message}", e)
+                        if (!hasError) {
+                            hasError = true
+                            sendError("Upload dispatch failed: ${e.message}")
+                        }
+                    }
                 }
 
-                awaitClose { }
+                awaitClose {
+                    android.util.Log.d("UPLOAD_REPO", "Upload flow closed")
+                }
             }
 
         private fun ProducerScope<Result<String>>.sendError(message: String) {
