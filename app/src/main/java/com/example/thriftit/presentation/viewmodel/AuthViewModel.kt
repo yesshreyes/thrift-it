@@ -140,22 +140,43 @@ class AuthViewModel
             }
 
             _authState.value = AuthUiState.Loading
+            android.util.Log.d("AUTH_VM", "Starting OTP verification...")
 
             viewModelScope.launch {
                 val result = authRepository.verifyOtpAndSignIn(verificationId, code)
+                android.util.Log.d("AUTH_VM", "OTP verification result: $result")
 
                 when (result) {
                     is Result.Success -> {
+                        android.util.Log.d("AUTH_VM", "OTP verified, loading user profile...")
                         // AFTER SIGN-IN, LOAD USER PROFILE
-                        authRepository.getCurrentUserProfile().collect { res ->
-                            if (res is Result.Success) {
-                                _currentUser.value = res.data
-                                _authState.value = AuthUiState.Success(res.data)
-                                return@collect
+                        try {
+                            val profileResult =
+                                authRepository
+                                    .getCurrentUserProfile()
+                                    .first { it is Result.Success || it is Result.Error }
+
+                            android.util.Log.d("AUTH_VM", "Profile result: $profileResult")
+
+                            when (profileResult) {
+                                is Result.Success -> {
+                                    _currentUser.value = profileResult.data
+                                    _authState.value = AuthUiState.Success(profileResult.data)
+                                    android.util.Log.d("AUTH_VM", "Login successful!")
+                                }
+                                is Result.Error -> {
+                                    android.util.Log.e("AUTH_VM", "Profile load failed: ${profileResult.message}")
+                                    _authState.value = AuthUiState.Error("Failed to load profile: ${profileResult.message}")
+                                }
+                                else -> Unit
                             }
+                        } catch (e: Exception) {
+                            android.util.Log.e("AUTH_VM", "Exception loading profile: ${e.message}", e)
+                            _authState.value = AuthUiState.Error("Failed to load profile: ${e.message}")
                         }
                     }
                     is Result.Error -> {
+                        android.util.Log.e("AUTH_VM", "OTP verification failed: ${result.message}")
                         _authState.value = AuthUiState.Error(result.message)
                     }
                     else -> Unit

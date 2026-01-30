@@ -48,7 +48,6 @@ class ThriftItApplication :
                 add(OkHttpNetworkFetcherFactory())
             }.build()
 
-
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel =
@@ -67,6 +66,9 @@ class ThriftItApplication :
     }
 
     private fun initCloudinary() {
+        android.util.Log.d("CLOUDINARY_INIT", "Initializing Cloudinary...")
+        android.util.Log.d("CLOUDINARY_INIT", "Cloud name: ${BuildConfig.CLOUDINARY_CLOUD_NAME}")
+
         val config =
             hashMapOf(
                 "cloud_name" to BuildConfig.CLOUDINARY_CLOUD_NAME,
@@ -77,7 +79,11 @@ class ThriftItApplication :
 
         try {
             MediaManager.init(this, config)
+            android.util.Log.d("CLOUDINARY_INIT", "Cloudinary initialized successfully!")
         } catch (e: IllegalStateException) {
+            android.util.Log.w("CLOUDINARY_INIT", "Cloudinary already initialized")
+        } catch (e: Exception) {
+            android.util.Log.e("CLOUDINARY_INIT", "Failed to initialize Cloudinary: ${e.message}", e)
         }
     }
 }

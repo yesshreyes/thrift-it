@@ -10,6 +10,7 @@ import com.example.thriftit.data.mappers.toEntity
 import com.example.thriftit.data.repository.AuthRepository
 import com.example.thriftit.data.repository.UploadRepository
 import com.example.thriftit.data.repository.UserRepository
+import com.example.thriftit.data.util.ImageStorageHelper
 import com.example.thriftit.domain.models.Coordinates
 import com.example.thriftit.domain.models.Item
 import com.example.thriftit.domain.models.ItemCategory
@@ -35,6 +36,7 @@ class SellViewModel
         private val userRepository: UserRepository,
         private val itemDao: ItemDao,
         private val networkObserver: NetworkObserver,
+        private val imageStorageHelper: ImageStorageHelper,
     ) : ViewModel() {
         private val networkStatus =
             networkObserver.networkStatus
@@ -43,6 +45,17 @@ class SellViewModel
                     started = SharingStarted.WhileSubscribed(5_000),
                     initialValue = NetworkStatus.UNAVAILABLE,
                 )
+
+        init {
+            loadCurrentUserLocation()
+
+            // Log network status changes
+            viewModelScope.launch {
+                networkStatus.collect { status ->
+                    android.util.Log.d("SELL_NETWORK", "Network status changed: $status")
+                }
+            }
+        }
 
         // ---------------- UPLOAD STATE ----------------
 
@@ -81,14 +94,6 @@ class SellViewModel
 
         private val _validationErrors = MutableStateFlow<Map<String, String>>(emptyMap())
         val validationErrors: StateFlow<Map<String, String>> = _validationErrors.asStateFlow()
-
-    /* ============================================================
-       IMAGE HANDLING
-       ============================================================ */
-
-        init {
-            loadCurrentUserLocation()
-        }
 
         private fun loadCurrentUserLocation() {
             val userId = authRepository.getCurrentUserId() ?: return
@@ -192,13 +197,25 @@ class SellViewModel
                         isAvailable = true,
                     )
 
-                // 🚨 OFFLINE → DO NOT SET Uploading
+                // 🚨 OFFLINE → Save images to internal storage
                 if (networkStatus.value != NetworkStatus.AVAILABLE) {
+                    android.util.Log.d("SELL_OFFLINE", "Saving item offline with ${_selectedImages.value.size} images")
+
+                    // Copy images to internal storage
+                    val savedPaths = imageStorageHelper.saveImagesToInternalStorage(_selectedImages.value)
+
+                    if (savedPaths.size != _selectedImages.value.size) {
+                        _uploadState.value = UploadUiState.Error("Failed to save some images")
+                        return@launch
+                    }
+
+                    android.util.Log.d("SELL_OFFLINE", "Saved ${savedPaths.size} images to internal storage")
+
                     itemDao.insertItem(
                         item.toEntity(
                             pendingUpload = true,
                             isSynced = false,
-                            localImageUris = _selectedImages.value,
+                            localImagePaths = savedPaths,
                         ),
                     )
 
@@ -207,7 +224,8 @@ class SellViewModel
                     return@launch
                 }
 
-                // 🌐 ONLINE → ONLY HERE Uploading is valid
+                // 🌐 ONLINE → Upload directly
+                android.util.Log.d("SELL_ONLINE", "Uploading item online with ${_selectedImages.value.size} images")
                 _uploadState.value = UploadUiState.Uploading(0f)
 
                 uploadRepository
@@ -216,8 +234,14 @@ class SellViewModel
                         _uploadState.value =
                             when (result) {
                                 is Result.Loading -> UploadUiState.Uploading(50f)
-                                is Result.Success -> UploadUiState.Success
-                                is Result.Error -> UploadUiState.Error(result.message)
+                                is Result.Success -> {
+                                    android.util.Log.d("SELL_ONLINE", "Upload successful")
+                                    UploadUiState.Success
+                                }
+                                is Result.Error -> {
+                                    android.util.Log.e("SELL_ONLINE", "Upload failed: ${result.message}")
+                                    UploadUiState.Error(result.message)
+                                }
                             }
                     }
             }

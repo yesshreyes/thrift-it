@@ -87,23 +87,47 @@ class AuthRepository
             otp: String,
         ): Result<String> {
             return try {
+                android.util.Log.d("AUTH_REPO", "Verifying OTP...")
                 val credential = PhoneAuthProvider.getCredential(verificationId, otp)
                 val authResult = auth.signInWithCredential(credential).await()
                 val firebaseUser = authResult.user ?: return Result.Error(Exception("User is null"))
-                val user =
-                    User(
-                        uid = firebaseUser.uid,
-                        phoneNumber = firebaseUser.phoneNumber ?: "",
-                        displayName = null,
-                        profileImageUrl = null,
-                        location = null,
-                        coordinates = null,
-                        lastUpdated = System.currentTimeMillis(),
-                    )
 
+                android.util.Log.d("AUTH_REPO", "OTP verified, user ID: ${firebaseUser.uid}")
+
+                // Check if user already exists in Firestore
+                val userDoc = usersCollection.document(firebaseUser.uid).get().await()
+
+                val user =
+                    if (userDoc.exists()) {
+                        android.util.Log.d("AUTH_REPO", "User exists in Firestore, loading...")
+                        userDoc.data?.toUser()
+                            ?: return Result.Error(Exception("Failed to parse user data"))
+                    } else {
+                        android.util.Log.d("AUTH_REPO", "Creating new user in Firestore...")
+                        val newUser =
+                            User(
+                                uid = firebaseUser.uid,
+                                phoneNumber = firebaseUser.phoneNumber ?: "",
+                                displayName = null,
+                                profileImageUrl = null,
+                                location = null,
+                                coordinates = null,
+                                lastUpdated = System.currentTimeMillis(),
+                            )
+
+                        // Create user document in Firestore
+                        usersCollection.document(newUser.uid).set(newUser.toFirestoreMap()).await()
+                        android.util.Log.d("AUTH_REPO", "User created in Firestore successfully")
+                        newUser
+                    }
+
+                // Save to local database
                 userDao.insertUser(user.toEntity())
+                android.util.Log.d("AUTH_REPO", "User saved to local database")
+
                 Result.Success(firebaseUser.uid)
             } catch (e: Exception) {
+                android.util.Log.e("AUTH_REPO", "Error in verifyOtpAndSignIn: ${e.message}", e)
                 Result.Error(e)
             }
         }

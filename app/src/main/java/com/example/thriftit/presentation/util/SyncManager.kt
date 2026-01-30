@@ -3,9 +3,11 @@ package com.example.thriftit.presentation.util
 import android.util.Log
 import com.example.thriftit.core.network.NetworkObserver
 import com.example.thriftit.core.network.NetworkStatus
+import com.example.thriftit.data.local.Converters
 import com.example.thriftit.data.local.dao.ItemDao
 import com.example.thriftit.data.mappers.toDomain
 import com.example.thriftit.data.repository.UploadRepository
+import com.example.thriftit.data.util.ImageStorageHelper
 import com.example.thriftit.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -21,7 +23,10 @@ class SyncManager
         private val networkObserver: NetworkObserver,
         private val itemDao: ItemDao,
         private val uploadRepository: UploadRepository,
+        private val imageStorageHelper: ImageStorageHelper,
     ) {
+        private val converters = Converters()
+
         init {
             Log.d("SYNC", "SyncManager initialized")
 
@@ -39,25 +44,52 @@ class SyncManager
 
         private suspend fun syncPendingItems() {
             val pendingItems = itemDao.getUnsyncedItems()
+            Log.d("SYNC", "Found ${pendingItems.size} pending items to sync")
 
             pendingItems.forEach { entity ->
-                uploadRepository
-                    .uploadItemWithImages(
-                        entity.toDomain(),
-                        entity.localImageUris,
-                    ).collect { result ->
-                        when (result) {
-                            is com.example.thriftit.domain.util.Result.Success -> {
-                                itemDao.markItemAsSynced(entity.id)
-                            }
+                try {
+                    // Convert stored paths back to URIs
+                    val imagePaths = converters.toStringList(entity.localImagePaths)
+                    Log.d("SYNC", "Syncing item ${entity.id} with ${imagePaths.size} images")
 
-                            is com.example.thriftit.domain.util.Result.Error -> {
-                                // optional: log error, retry later
-                            }
-
-                            else -> Unit
-                        }
+                    if (imagePaths.isEmpty()) {
+                        Log.w("SYNC", "Item ${entity.id} has no images, skipping")
+                        return@forEach
                     }
+
+                    val imageUris = imageStorageHelper.getUrisFromPaths(imagePaths)
+
+                    if (imageUris.size != imagePaths.size) {
+                        Log.e("SYNC", "Some images missing for item ${entity.id}: expected ${imagePaths.size}, found ${imageUris.size}")
+                        // Continue anyway with available images
+                    }
+
+                    uploadRepository
+                        .uploadItemWithImages(
+                            entity.toDomain(),
+                            imageUris,
+                        ).collect { result ->
+                            when (result) {
+                                is com.example.thriftit.domain.util.Result.Success -> {
+                                    Log.d("SYNC", "Successfully synced item ${entity.id}, deleting local copy")
+                                    // Delete the local item since it's now in Firebase
+                                    itemDao.deleteItemById(entity.id)
+                                    // Clean up local images after successful sync
+                                    imageStorageHelper.deleteImages(imagePaths)
+                                    Log.d("SYNC", "Local item and images deleted")
+                                }
+
+                                is com.example.thriftit.domain.util.Result.Error -> {
+                                    Log.e("SYNC", "Failed to sync item ${entity.id}: ${result.message}")
+                                    // Don't delete images, keep for retry
+                                }
+
+                                else -> Unit
+                            }
+                        }
+                } catch (e: Exception) {
+                    Log.e("SYNC", "Error syncing item ${entity.id}: ${e.message}", e)
+                }
             }
         }
     }

@@ -1,6 +1,6 @@
 package com.example.thriftit.data.mappers
 
-import android.net.Uri
+import com.example.thriftit.data.local.Converters
 import com.example.thriftit.data.local.entities.ItemEntity
 import com.example.thriftit.domain.models.Coordinates
 import com.example.thriftit.domain.models.Item
@@ -33,9 +33,10 @@ fun ItemEntity.toDomain(): Item =
 fun Item.toEntity(
     pendingUpload: Boolean = false,
     isSynced: Boolean = true,
-    localImageUris: List<Uri> = emptyList(),
-): ItemEntity =
-    ItemEntity(
+    localImagePaths: List<String> = emptyList(),
+): ItemEntity {
+    val converters = Converters()
+    return ItemEntity(
         id = id,
         title = title,
         description = description,
@@ -48,11 +49,12 @@ fun Item.toEntity(
         latitude = coordinates?.latitude,
         longitude = coordinates?.longitude,
         isAvailable = isAvailable,
-        pendingUpload = pendingUpload, // ✅ FIXED
-        isSynced = isSynced, // ✅ FIXED
-        localImageUris = localImageUris, // ✅ FIXED
+        pendingUpload = pendingUpload,
+        isSynced = isSynced,
+        localImagePaths = converters.fromStringList(localImagePaths),
         lastUpdated = lastUpdated,
     )
+}
 
 fun List<ItemEntity>.toDomainList(): List<Item> = map { it.toDomain() }
 

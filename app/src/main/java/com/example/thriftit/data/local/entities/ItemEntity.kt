@@ -1,6 +1,5 @@
 package com.example.thriftit.data.local.entities
 
-import android.net.Uri
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -35,8 +34,8 @@ data class ItemEntity(
     val isSynced: Boolean = true,
     @ColumnInfo(name = "pending_upload")
     val pendingUpload: Boolean = false,
-    @ColumnInfo(name = "local_image_uris")
-    val localImageUris: List<Uri> = emptyList(),
+    @ColumnInfo(name = "local_image_paths")
+    val localImagePaths: String = "[]", // JSON-encoded list of file paths
     @ColumnInfo(name = "last_updated")
     val lastUpdated: Long = System.currentTimeMillis(),
 )
