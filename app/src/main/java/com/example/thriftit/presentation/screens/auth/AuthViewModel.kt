@@ -1,4 +1,4 @@
-package com.example.thriftit.presentation.viewmodel
+package com.example.thriftit.presentation.screens.auth
 
 import android.app.Activity
 import androidx.lifecycle.ViewModel
@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.thriftit.data.repository.AuthRepository
 import com.example.thriftit.domain.models.User
 import com.example.thriftit.domain.util.Result
-import com.example.thriftit.presentation.util.AuthUiState
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +22,6 @@ class AuthViewModel
     constructor(
         private val authRepository: AuthRepository,
     ) : ViewModel() {
-        // Use your existing AuthUiState
         private val _authState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
         val authState: StateFlow<AuthUiState> = _authState.asStateFlow()
 
@@ -42,7 +40,6 @@ class AuthViewModel
             checkAuthStatus()
         }
 
-        // Check if user is already logged in
         private fun checkAuthStatus() {
             viewModelScope.launch {
                 if (!authRepository.isUserLoggedIn()) return@launch
@@ -57,29 +54,24 @@ class AuthViewModel
                         _currentUser.value = result.data
                         _authState.value = AuthUiState.Success(result.data)
                     }
-
                     is Result.Error -> {
                         _authState.value = AuthUiState.Error(result.message)
                     }
-
                     else -> Unit
                 }
             }
         }
 
-        // Update phone number
         fun updatePhoneNumber(number: String) {
             _phoneNumber.value = number
         }
 
-        // Update OTP
         fun updateOtp(code: String) {
             _otp.value = code
         }
 
-        // Send OTP to phone number
         fun sendOtp(activity: Activity) {
-            val phone = "+91${_phoneNumber.value}" // Add country code
+            val phone = "+91${_phoneNumber.value}"
 
             if (!isValidPhoneNumber(phone)) {
                 _authState.value = AuthUiState.Error("Invalid phone number")
@@ -111,11 +103,7 @@ class AuthViewModel
                 authRepository.sendVerificationCode(phone, activity, callbacks).collect { result ->
                     when (result) {
                         is Result.Loading -> { /* Already loading */ }
-                        is Result.Success -> {
-                            if (result.data == "auto_verified") {
-                                // Auto verification successful
-                            }
-                        }
+                        is Result.Success -> { /* Auto-verified */ }
                         is Result.Error -> {
                             _authState.value = AuthUiState.Error(result.message)
                         }
@@ -124,7 +112,6 @@ class AuthViewModel
             }
         }
 
-        // Verify OTP
         fun verifyOtp() {
             val code = _otp.value
             val verificationId = this.verificationId
@@ -149,7 +136,6 @@ class AuthViewModel
                 when (result) {
                     is Result.Success -> {
                         android.util.Log.d("AUTH_VM", "OTP verified, loading user profile...")
-                        // AFTER SIGN-IN, LOAD USER PROFILE
                         try {
                             val profileResult =
                                 authRepository
@@ -184,7 +170,6 @@ class AuthViewModel
             }
         }
 
-        // Sign in with credential (auto-verification)
         private fun signInWithCredential(credential: PhoneAuthCredential) {
             viewModelScope.launch {
                 val result = authRepository.signInWithCredential(credential)
@@ -201,10 +186,9 @@ class AuthViewModel
             }
         }
 
-        // Validate phone number
-        private fun isValidPhoneNumber(phone: String): Boolean = phone.isNotEmpty() && phone.matches(Regex("^\\+?[1-9]\\d{1,14}$"))
+        private fun isValidPhoneNumber(phone: String): Boolean =
+            phone.isNotEmpty() && phone.matches(Regex("^\\+?[1-9]\\d{1,14}$"))
 
-        // Reset state
         fun resetState() {
             _authState.value = AuthUiState.Idle
             _otp.value = ""

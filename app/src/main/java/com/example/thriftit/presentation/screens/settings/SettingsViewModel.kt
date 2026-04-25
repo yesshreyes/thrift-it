@@ -1,4 +1,4 @@
-package com.example.thriftit.presentation.viewmodel
+package com.example.thriftit.presentation.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,23 +21,14 @@ class SettingsViewModel
         private val authRepository: AuthRepository,
         private val userRepository: UserRepository,
     ) : ViewModel() {
-        // Current user info
         private val _userState = MutableStateFlow<UiState<User?>>(UiState.Loading)
         val userState: StateFlow<UiState<User?>> = _userState.asStateFlow()
 
-        // Sign‑out / delete‑account actions
         private val _signOutState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
         val signOutState: StateFlow<UiState<Unit>> = _signOutState.asStateFlow()
 
         private val _deleteAccountState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
         val deleteAccountState: StateFlow<UiState<Unit>> = _deleteAccountState.asStateFlow()
-
-        // Simple settings toggles (you can persist via DataStore later)
-        private val _notificationsEnabled = MutableStateFlow(true)
-        val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
-
-        private val _darkModeEnabled = MutableStateFlow(false)
-        val darkModeEnabled: StateFlow<Boolean> = _darkModeEnabled.asStateFlow()
 
         init {
             observeCurrentUser()
@@ -46,32 +37,20 @@ class SettingsViewModel
         private fun observeCurrentUser() {
             viewModelScope.launch {
                 authRepository.getCurrentUserProfile().collect { result ->
-                    _userState.value =
-                        when (result) {
-                            is Result.Loading -> UiState.Loading
-                            is Result.Success -> UiState.Success(result.data)
-                            is Result.Error -> UiState.Error(result.message)
-                        }
+                    _userState.value = when (result) {
+                        is Result.Loading -> UiState.Loading
+                        is Result.Success -> UiState.Success(result.data)
+                        is Result.Error -> UiState.Error(result.message)
+                    }
                 }
             }
-        }
-
-        fun toggleNotifications(enabled: Boolean) {
-            _notificationsEnabled.value = enabled
-        }
-
-        fun toggleDarkMode(enabled: Boolean) {
-            _darkModeEnabled.value = enabled
         }
 
         fun signOut() {
             viewModelScope.launch {
                 _signOutState.value = UiState.Loading
-
                 when (val res = authRepository.signOut()) {
-                    is Result.Success -> {
-                        _signOutState.value = UiState.Success(Unit)
-                    }
+                    is Result.Success -> _signOutState.value = UiState.Success(Unit)
                     is Result.Error -> _signOutState.value = UiState.Error(res.message)
                     else -> Unit
                 }
